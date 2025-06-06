@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, CreditCard, DollarSign, User, Check } from 'lucide-react';
 import { CartItem } from '../types';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export function CheckoutModal({
   const [customerName, setCustomerName] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [showSuccess, setShowSuccess] = useState(false);
+  const { formatPrice, formatDualPrice } = useCurrency();
 
   const total = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const tax = total * 0.08; // 8% tax rate
@@ -93,24 +95,32 @@ export function CheckoutModal({
                     <span className="font-medium text-gray-800">{item.product.name}</span>
                     <span className="text-gray-600 ml-2">×{item.quantity}</span>
                   </div>
-                  <span className="font-semibold text-gray-800">
-                    ${(item.product.price * item.quantity).toFixed(2)}
-                  </span>
+                  <div className="text-right">
+                    <div className="font-semibold text-gray-800">
+                      {formatPrice(item.product.price * item.quantity)}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {formatDualPrice(item.product.price * item.quantity)}
+                    </div>
+                  </div>
                 </div>
               ))}
               
               <div className="border-t border-gray-200 pt-3 space-y-2">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal:</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>{formatPrice(total)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Tax (8%):</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>{formatPrice(tax)}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold text-gray-800 border-t border-gray-200 pt-2">
                   <span>Total:</span>
-                  <span>${finalTotal.toFixed(2)}</span>
+                  <span>{formatPrice(finalTotal)}</span>
+                </div>
+                <div className="text-center text-sm text-gray-500">
+                  {formatDualPrice(finalTotal)}
                 </div>
               </div>
             </div>
@@ -187,7 +197,7 @@ export function CheckoutModal({
                     Processing...
                   </div>
                 ) : (
-                  `Complete Order - $${finalTotal.toFixed(2)}`
+                  `Complete Order - ${formatPrice(finalTotal)}`
                 )}
               </button>
             </div>

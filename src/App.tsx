@@ -3,18 +3,25 @@ import { Menu } from './components/Menu';
 import { Cart } from './components/Cart';
 import { CheckoutModal } from './components/CheckoutModal';
 import { AdminDashboard } from './components/admin/AdminDashboard';
+import { LoginModal } from './components/auth/LoginModal';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { CurrencyToggle } from './components/CurrencyToggle';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { CurrencyProvider } from './contexts/CurrencyContext';
 import { useProducts } from './hooks/useProducts';
 import { useOrders } from './hooks/useOrders';
 import { Product, CartItem } from './types';
-import { ShoppingBag, Coffee, Settings } from 'lucide-react';
+import { ShoppingBag, Coffee, Settings, LogIn, LogOut, User } from 'lucide-react';
 
-function App() {
+function AppContent() {
+  const { user, isAdmin, signOut } = useAuth();
   const { products, categories, loading, error } = useProducts();
   const { createOrder, loading: orderLoading } = useOrders();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showCheckout, setShowCheckout] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
 
   const addToCart = (product: Product) => {
     setCartItems(prev => {
@@ -53,6 +60,10 @@ function App() {
 
   const handleCheckout = () => {
     if (cartItems.length === 0) return;
+    if (!user) {
+      setShowLogin(true);
+      return;
+    }
     setShowCheckout(true);
   };
 
@@ -65,8 +76,24 @@ function App() {
     }
   };
 
+  const handleAdminAccess = () => {
+    if (!user) {
+      setShowLogin(true);
+      return;
+    }
+    if (!isAdmin) {
+      alert('You do not have admin access. Please contact an administrator.');
+      return;
+    }
+    setShowAdmin(true);
+  };
+
   if (showAdmin) {
-    return <AdminDashboard onClose={() => setShowAdmin(false)} />;
+    return (
+      <ProtectedRoute requireAdmin>
+        <AdminDashboard onClose={() => setShowAdmin(false)} />
+      </ProtectedRoute>
+    );
   }
 
   if (loading) {
@@ -115,13 +142,42 @@ function App() {
             </div>
             
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setShowAdmin(true)}
-                className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full transition-colors"
-              >
-                <Settings className="text-gray-600" size={20} />
-                <span className="font-medium text-gray-700">Admin</span>
-              </button>
+              <CurrencyToggle />
+              
+              {user ? (
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 bg-blue-100 px-3 py-2 rounded-full">
+                    <User className="text-blue-600" size={16} />
+                    <span className="text-sm font-medium text-blue-800">{user.email}</span>
+                  </div>
+                  
+                  {isAdmin && (
+                    <button
+                      onClick={handleAdminAccess}
+                      className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full transition-colors"
+                    >
+                      <Settings className="text-gray-600" size={20} />
+                      <span className="font-medium text-gray-700">Admin</span>
+                    </button>
+                  )}
+                  
+                  <button
+                    onClick={signOut}
+                    className="flex items-center gap-2 bg-red-100 hover:bg-red-200 px-4 py-2 rounded-full transition-colors"
+                  >
+                    <LogOut className="text-red-600" size={20} />
+                    <span className="font-medium text-red-700">Sign Out</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowLogin(true)}
+                  className="flex items-center gap-2 bg-blue-100 hover:bg-blue-200 px-4 py-2 rounded-full transition-colors"
+                >
+                  <LogIn className="text-blue-600" size={20} />
+                  <span className="font-medium text-blue-700">Sign In</span>
+                </button>
+              )}
               
               <div className="flex items-center gap-2 bg-orange-100 px-4 py-2 rounded-full">
                 <ShoppingBag className="text-orange-600" size={20} />
@@ -162,7 +218,12 @@ function App() {
         </div>
       </main>
 
-      {/* Checkout Modal */}
+      {/* Modals */}
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+      />
+
       {showCheckout && (
         <CheckoutModal
           isOpen={showCheckout}
@@ -173,6 +234,16 @@ function App() {
         />
       )}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <CurrencyProvider>
+        <AppContent />
+      </CurrencyProvider>
+    </AuthProvider>
   );
 }
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
 import { Product } from '../types';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 interface ProductCardProps {
   product: Product;
@@ -8,6 +9,8 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onAddToCart }: ProductCardProps) {
+  const { formatDualPrice } = useCurrency();
+
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-105">
       <div className="aspect-video bg-gradient-to-br from-orange-100 to-yellow-100 flex items-center justify-center">
@@ -34,9 +37,11 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
         )}
         
         <div className="flex items-center justify-between">
-          <span className="text-2xl font-bold text-orange-600">
-            ${product.price.toFixed(2)}
-          </span>
+          <div className="text-orange-600">
+            <div className="text-lg font-bold">
+              {formatDualPrice(product.price)}
+            </div>
+          </div>
           
           <button
             onClick={() => onAddToCart(product)}

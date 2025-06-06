@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, BarChart3, Package, Users, Settings, FileText, TrendingUp, ShoppingCart } from 'lucide-react';
+import { X, BarChart3, Package, Users, Settings, FileText, TrendingUp, ShoppingCart, Shield } from 'lucide-react';
 import { Dashboard } from './Dashboard';
 import { ProductManagement } from './ProductManagement';
 import { CategoryManagement } from './CategoryManagement';
@@ -8,12 +8,13 @@ import { InventoryManagement } from './InventoryManagement';
 import { CustomerManagement } from './CustomerManagement';
 import { SettingsPanel } from './SettingsPanel';
 import { SalesReports } from './SalesReports';
+import { AdminUserManagement } from './AdminUserManagement';
 
 interface AdminDashboardProps {
   onClose: () => void;
 }
 
-type AdminView = 'dashboard' | 'products' | 'categories' | 'orders' | 'inventory' | 'customers' | 'settings' | 'reports';
+type AdminView = 'dashboard' | 'products' | 'categories' | 'orders' | 'inventory' | 'customers' | 'settings' | 'reports' | 'admin-users';
 
 export function AdminDashboard({ onClose }: AdminDashboardProps) {
   const [activeView, setActiveView] = useState<AdminView>('dashboard');
@@ -26,6 +27,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     { id: 'inventory', label: 'Inventory', icon: Package },
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'reports', label: 'Sales Reports', icon: TrendingUp },
+    { id: 'admin-users', label: 'Admin Users', icon: Shield },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -47,6 +49,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         return <SettingsPanel />;
       case 'reports':
         return <SalesReports />;
+      case 'admin-users':
+        return <AdminUserManagement />;
       default:
         return <Dashboard />;
     }
