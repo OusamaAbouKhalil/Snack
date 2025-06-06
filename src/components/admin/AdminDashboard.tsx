@@ -1,0 +1,103 @@
+import React, { useState } from 'react';
+import { X, BarChart3, Package, Users, Settings, FileText, TrendingUp, ShoppingCart } from 'lucide-react';
+import { Dashboard } from './Dashboard';
+import { ProductManagement } from './ProductManagement';
+import { CategoryManagement } from './CategoryManagement';
+import { OrderHistory } from './OrderHistory';
+import { InventoryManagement } from './InventoryManagement';
+import { CustomerManagement } from './CustomerManagement';
+import { SettingsPanel } from './SettingsPanel';
+import { SalesReports } from './SalesReports';
+
+interface AdminDashboardProps {
+  onClose: () => void;
+}
+
+type AdminView = 'dashboard' | 'products' | 'categories' | 'orders' | 'inventory' | 'customers' | 'settings' | 'reports';
+
+export function AdminDashboard({ onClose }: AdminDashboardProps) {
+  const [activeView, setActiveView] = useState<AdminView>('dashboard');
+
+  const menuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'products', label: 'Products', icon: Package },
+    { id: 'categories', label: 'Categories', icon: FileText },
+    { id: 'orders', label: 'Order History', icon: ShoppingCart },
+    { id: 'inventory', label: 'Inventory', icon: Package },
+    { id: 'customers', label: 'Customers', icon: Users },
+    { id: 'reports', label: 'Sales Reports', icon: TrendingUp },
+    { id: 'settings', label: 'Settings', icon: Settings },
+  ];
+
+  const renderContent = () => {
+    switch (activeView) {
+      case 'dashboard':
+        return <Dashboard />;
+      case 'products':
+        return <ProductManagement />;
+      case 'categories':
+        return <CategoryManagement />;
+      case 'orders':
+        return <OrderHistory />;
+      case 'inventory':
+        return <InventoryManagement />;
+      case 'customers':
+        return <CustomerManagement />;
+      case 'settings':
+        return <SettingsPanel />;
+      case 'reports':
+        return <SalesReports />;
+      default:
+        return <Dashboard />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="w-64 bg-white shadow-lg">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-800">Admin Panel</h2>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+        
+        <nav className="p-4">
+          <ul className="space-y-2">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <li key={item.id}>
+                  <button
+                    onClick={() => setActiveView(item.id as AdminView)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                      activeView === item.id
+                        ? 'bg-orange-100 text-orange-700 font-medium'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Icon size={20} />
+                    {item.label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-8">
+          {renderContent()}
+        </div>
+      </div>
+    </div>
+  );
+}
