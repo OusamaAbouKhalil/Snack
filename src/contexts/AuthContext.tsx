@@ -33,8 +33,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      checkAdminStatus(session?.user);
-      setLoading(false);
+      if (session?.user) {
+        checkAdminStatus(session.user);
+      } else {
+        setIsAdmin(false);
+        setLoading(false);
+      }
     });
 
     // Listen for auth changes
@@ -42,31 +46,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        checkAdminStatus(session?.user);
-        setLoading(false);
+        if (session?.user) {
+          await checkAdminStatus(session.user);
+        } else {
+          setIsAdmin(false);
+          setLoading(false);
+        }
       }
     );
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkAdminStatus = async (user: User | null) => {
-    if (!user) {
-      setIsAdmin(false);
-      return;
-    }
-
+  const checkAdminStatus = async (user: User) => {
     try {
       const { data, error } = await supabase
         .from('admin_users')
-        .select('id')
+        .select('id, is_active')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .single();
 
-      setIsAdmin(!!data && !error);
+      if (error) {
+        // If no admin record found, check by email as fallback
+        const { data: emailData, error: emailError } = await supabase
+          .from('admin_users')
+          .select('id, is_active')
+          .eq('email', user.email)
+          .eq('is_active', true)
+          .single();
+
+        setIsAdmin(!!emailData && !emailError);
+      } else {
+        setIsAdmin(!!data);
+      }
     } catch (error) {
+      console.error('Error checking admin status:', error);
       setIsAdmin(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -88,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setIsAdmin(false);
   };
 
   const value = {

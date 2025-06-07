@@ -4,7 +4,6 @@ import { Cart } from './components/Cart';
 import { CheckoutModal } from './components/CheckoutModal';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { LoginModal } from './components/auth/LoginModal';
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { CurrencyToggle } from './components/CurrencyToggle';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
@@ -84,11 +83,10 @@ function AppContent() {
     setShowAdmin(true);
   };
 
+  // Show admin dashboard if requested and user is authenticated admin
   if (showAdmin && user && isAdmin) {
     return (
-      <ProtectedRoute requireAdmin>
-        <AdminDashboard onClose={() => setShowAdmin(false)} />
-      </ProtectedRoute>
+      <AdminDashboard onClose={() => setShowAdmin(false)} />
     );
   }
 
@@ -143,7 +141,7 @@ function AppContent() {
               {user ? (
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2 bg-blue-100 px-3 py-2 rounded-full">
-                    <User className="text-blue-600\" size={16} />
+                    <User className="text-blue-600" size={16} />
                     <span className="text-sm font-medium text-blue-800">{user.email}</span>
                   </div>
                   
