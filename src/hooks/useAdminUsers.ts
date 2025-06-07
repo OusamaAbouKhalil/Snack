@@ -37,34 +37,52 @@ export function useAdminUsers() {
 
   const addAdminUser = async (email: string): Promise<boolean> => {
     try {
-      // First, find the user by email
-      const { data: userData, error: userError } = await supabase
-        .from('auth.users')
-        .select('id')
-        .eq('email', email)
-        .single();
+      // First check if user exists in auth.users
+      const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+      
+      if (listError) {
+        // Fallback: try to add directly (user might exist but we can't list them)
+        const { error } = await supabase
+          .from('admin_users')
+          .insert({
+            email: email,
+            is_active: true
+          });
 
-      if (userError) {
-        alert('User not found. Please make sure the user has an account.');
-        return false;
-      }
-
-      // Add to admin_users table
-      const { error } = await supabase
-        .from('admin_users')
-        .insert({
-          user_id: userData.id,
-          email: email,
-          is_active: true
-        });
-
-      if (error) {
-        if (error.code === '23505') {
-          alert('User is already an admin.');
-        } else {
-          alert('Failed to add admin user.');
+        if (error) {
+          if (error.code === '23505') {
+            alert('User is already an admin.');
+          } else {
+            alert('Failed to add admin user. Please ensure the user has an account.');
+          }
+          return false;
         }
-        return false;
+      } else {
+        // Find user by email
+        const user = users.find(u => u.email === email);
+        
+        if (!user) {
+          alert('User not found. Please make sure the user has an account.');
+          return false;
+        }
+
+        // Add to admin_users table
+        const { error } = await supabase
+          .from('admin_users')
+          .insert({
+            user_id: user.id,
+            email: email,
+            is_active: true
+          });
+
+        if (error) {
+          if (error.code === '23505') {
+            alert('User is already an admin.');
+          } else {
+            alert('Failed to add admin user.');
+          }
+          return false;
+        }
       }
 
       await fetchAdminUsers();

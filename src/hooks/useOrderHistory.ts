@@ -29,5 +29,30 @@ export function useOrderHistory() {
     }
   };
 
-  return { orders, loading, error, refetch: fetchOrders };
+  const updateOrderStatus = async (orderId: string, status: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      
+      // Update local state
+      setOrders(prev => 
+        prev.map(order => 
+          order.id === orderId 
+            ? { ...order, status }
+            : order
+        )
+      );
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      return false;
+    }
+  };
+
+  return { orders, loading, error, updateOrderStatus, refetch: fetchOrders };
 }

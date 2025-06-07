@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 interface DashboardStats {
   todaySales: number;
   todayOrders: number;
+  pendingOrders: number;
   totalCustomers: number;
   lowStockItems: number;
   recentOrders: Array<{
@@ -12,6 +13,7 @@ interface DashboardStats {
     customer_name: string;
     total_amount: number;
     payment_method: string;
+    status: string;
   }>;
   topProducts: Array<{
     id: string;
@@ -25,6 +27,7 @@ export function useDashboardStats() {
   const [stats, setStats] = useState<DashboardStats>({
     todaySales: 0,
     todayOrders: 0,
+    pendingOrders: 0,
     totalCustomers: 0,
     lowStockItems: 0,
     recentOrders: [],
@@ -49,10 +52,16 @@ export function useDashboardStats() {
 
       const todaySales = todayOrders?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
 
-      // Recent orders
+      // Pending orders
+      const { data: pendingOrders } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('status', 'pending');
+
+      // Recent orders with status
       const { data: recentOrders } = await supabase
         .from('orders')
-        .select('id, order_number, customer_name, total_amount, payment_method')
+        .select('id, order_number, customer_name, total_amount, payment_method, status')
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -60,8 +69,14 @@ export function useDashboardStats() {
       setStats({
         todaySales,
         todayOrders: todayOrders?.length || 0,
+<<<<<<< HEAD
         totalCustomers: 0, // Mock data
         lowStockItems: 0, // Mock data
+=======
+        pendingOrders: pendingOrders?.length || 0,
+        totalCustomers: 150, // Mock data
+        lowStockItems: 3, // Mock data
+>>>>>>> 609f4c15f299950890e8e44bb3772d19f92fea4d
         recentOrders: recentOrders || [],
         topProducts: []
       });

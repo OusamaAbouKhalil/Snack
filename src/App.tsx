@@ -60,10 +60,6 @@ function AppContent() {
 
   const handleCheckout = () => {
     if (cartItems.length === 0) return;
-    if (!user) {
-      setShowLogin(true);
-      return;
-    }
     setShowCheckout(true);
   };
 
@@ -88,7 +84,7 @@ function AppContent() {
     setShowAdmin(true);
   };
 
-  if (showAdmin) {
+  if (showAdmin && user && isAdmin) {
     return (
       <ProtectedRoute requireAdmin>
         <AdminDashboard onClose={() => setShowAdmin(false)} />
@@ -175,7 +171,7 @@ function AppContent() {
                   className="flex items-center gap-2 bg-blue-100 hover:bg-blue-200 px-4 py-2 rounded-full transition-colors"
                 >
                   <LogIn className="text-blue-600" size={20} />
-                  <span className="font-medium text-blue-700">Sign In</span>
+                  <span className="font-medium text-blue-700">Admin Login</span>
                 </button>
               )}
               
