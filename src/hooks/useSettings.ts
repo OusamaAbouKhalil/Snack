@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 
 interface Settings {
   tax_rate: number;
@@ -26,7 +25,7 @@ export function useSettings() {
       // For now, we'll use default settings
       // In a real implementation, you'd have a settings table
       const defaultSettings: Settings = {
-        tax_rate: 8.0,
+        tax_rate: 11.0,
         currency: 'USD',
         store_name: 'Crêpe Café',
         store_address: '123 Main Street, City, State 12345',

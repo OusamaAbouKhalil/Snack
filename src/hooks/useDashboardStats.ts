@@ -60,14 +60,10 @@ export function useDashboardStats() {
       setStats({
         todaySales,
         todayOrders: todayOrders?.length || 0,
-        totalCustomers: 150, // Mock data
-        lowStockItems: 3, // Mock data
+        totalCustomers: 0, // Mock data
+        lowStockItems: 0, // Mock data
         recentOrders: recentOrders || [],
-        topProducts: [
-          { id: '1', name: 'Classic Nutella', price: 8.50, total_sold: 45 },
-          { id: '2', name: 'Strawberry Banana', price: 9.75, total_sold: 32 },
-          { id: '3', name: 'Ham & Cheese', price: 10.50, total_sold: 28 }
-        ]
+        topProducts: []
       });
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
