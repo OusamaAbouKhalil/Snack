@@ -143,7 +143,7 @@ function AppContent() {
               {user ? (
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2 bg-blue-100 px-3 py-2 rounded-full">
-                    <User className="text-blue-600" size={16} />
+                    <User className="text-blue-600\" size={16} />
                     <span className="text-sm font-medium text-blue-800">{user.email}</span>
                   </div>
                   
