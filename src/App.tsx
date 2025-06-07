@@ -4,6 +4,7 @@ import { Cart } from './components/Cart';
 import { CheckoutModal } from './components/CheckoutModal';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { LoginModal } from './components/auth/LoginModal';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { CurrencyToggle } from './components/CurrencyToggle';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
@@ -83,10 +84,11 @@ function AppContent() {
     setShowAdmin(true);
   };
 
-  // Show admin dashboard if requested and user is authenticated admin
   if (showAdmin && user && isAdmin) {
     return (
-      <AdminDashboard onClose={() => setShowAdmin(false)} />
+      <ProtectedRoute requireAdmin>
+        <AdminDashboard onClose={() => setShowAdmin(false)} />
+      </ProtectedRoute>
     );
   }
 
