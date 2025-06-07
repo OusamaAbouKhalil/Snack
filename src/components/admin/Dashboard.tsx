@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, DollarSign, ShoppingCart, Users, Package, AlertTriangle } from 'lucide-react';
+import { TrendingUp, DollarSign, ShoppingCart, Users, Package, AlertTriangle, Clock } from 'lucide-react';
 import { useDashboardStats } from '../../hooks/useDashboardStats';
 
 export function Dashboard() {
@@ -29,11 +29,11 @@ export function Dashboard() {
       change: '+8%'
     },
     {
-      title: 'Total Customers',
-      value: stats.totalCustomers.toString(),
-      icon: Users,
-      color: 'bg-purple-500',
-      change: '+5%'
+      title: 'Pending Orders',
+      value: stats.pendingOrders.toString(),
+      icon: Clock,
+      color: 'bg-yellow-500',
+      change: `${stats.pendingOrders} pending`
     },
     {
       title: 'Low Stock Items',
@@ -86,6 +86,13 @@ export function Dashboard() {
                 <div>
                   <p className="font-medium text-gray-900">#{order.order_number}</p>
                   <p className="text-sm text-gray-600">{order.customer_name || 'Walk-in Customer'}</p>
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${
+                    order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {order.status}
+                  </span>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-gray-900">${order.total_amount.toFixed(2)}</p>

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Search, Calendar, Filter, Eye, Download } from 'lucide-react';
+import { Search, Calendar, Filter, Eye, Download, Check, X, Clock } from 'lucide-react';
 import { useOrderHistory } from '../../hooks/useOrderHistory';
 import { OrderDetailsModal } from './OrderDetailsModal';
 
 export function OrderHistory() {
-  const { orders, loading, refetch } = useOrderHistory();
+  const { orders, loading, updateOrderStatus, refetch } = useOrderHistory();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
@@ -32,6 +32,15 @@ export function OrderHistory() {
     }
   };
 
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    const success = await updateOrderStatus(orderId, newStatus);
+    if (success) {
+      refetch();
+    }
+  };
+
+  const pendingCount = orders.filter(order => order.status === 'pending').length;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -46,6 +55,12 @@ export function OrderHistory() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Order History</h1>
           <p className="text-gray-600 mt-1">Track and manage all customer orders</p>
+          {pendingCount > 0 && (
+            <div className="mt-2 flex items-center gap-2 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium w-fit">
+              <Clock size={16} />
+              {pendingCount} pending orders
+            </div>
+          )}
         </div>
         <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
           <Download size={20} />
@@ -133,20 +148,44 @@ export function OrderHistory() {
                     <div className="text-gray-900 capitalize">{order.payment_method}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                      {order.status}
-                    </span>
+                    <select
+                      value={order.status}
+                      onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                      className={`px-2 py-1 rounded-full text-xs font-medium border-0 ${getStatusColor(order.status)}`}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-gray-500">
                     {new Date(order.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => setSelectedOrder(order.id)}
-                      className="text-orange-600 hover:text-orange-900 p-1"
-                    >
-                      <Eye size={16} />
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setSelectedOrder(order.id)}
+                        className="text-orange-600 hover:text-orange-900 p-1"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      {order.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => handleStatusChange(order.id, 'completed')}
+                            className="text-green-600 hover:text-green-900 p-1"
+                          >
+                            <Check size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleStatusChange(order.id, 'cancelled')}
+                            className="text-red-600 hover:text-red-900 p-1"
+                          >
+                            <X size={16} />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
