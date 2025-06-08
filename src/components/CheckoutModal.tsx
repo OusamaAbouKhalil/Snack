@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { X, CreditCard, DollarSign, User, Check } from 'lucide-react';
+import { X, CreditCard, DollarSign, User, Check, Printer } from 'lucide-react';
 import { CartItem } from '../types';
-import { useCurrency } from '../contexts/CurrencyContext';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -21,7 +20,7 @@ export function CheckoutModal({
   const [customerName, setCustomerName] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [showSuccess, setShowSuccess] = useState(false);
-  const { formatPrice, formatDualPrice } = useCurrency();
+  const [orderNumber, setOrderNumber] = useState('');
 
   const total = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const tax = total * 0.08; // 8% tax rate
@@ -36,20 +35,101 @@ export function CheckoutModal({
     }
 
     try {
+      const generatedOrderNumber = `ORD-${Date.now()}`;
+      setOrderNumber(generatedOrderNumber);
       await onOrderComplete(customerName.trim(), paymentMethod);
       setShowSuccess(true);
-      
-      // Auto close after success
-      setTimeout(() => {
-        setShowSuccess(false);
-        onClose();
-        setCustomerName('');
-        setPaymentMethod('cash');
-      }, 2000);
     } catch (error) {
       console.error('Order failed:', error);
       alert('Failed to process order. Please try again.');
     }
+  };
+
+  const printInvoice = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const invoiceHTML = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Invoice - ${orderNumber}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; border-bottom: 2px solid #f97316; padding-bottom: 20px; margin-bottom: 20px; }
+            .logo { color: #f97316; font-size: 24px; font-weight: bold; }
+            .order-info { margin-bottom: 20px; }
+            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            .items-table th { background-color: #f97316; color: white; }
+            .total-section { text-align: right; }
+            .total-line { margin: 5px 0; }
+            .final-total { font-weight: bold; font-size: 18px; border-top: 2px solid #f97316; padding-top: 10px; }
+            .footer { text-align: center; margin-top: 30px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="logo">🥞 Crêpe Café</div>
+            <p>Delicious Crepes & More</p>
+            <p>123 Main Street, City, State 12345 | (555) 123-4567</p>
+          </div>
+          
+          <div class="order-info">
+            <h3>Order Invoice</h3>
+            <p><strong>Order Number:</strong> ${orderNumber}</p>
+            <p><strong>Customer:</strong> ${customerName}</p>
+            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+            <p><strong>Time:</strong> ${new Date().toLocaleTimeString()}</p>
+            <p><strong>Payment Method:</strong> ${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}</p>
+          </div>
+
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${cartItems.map(item => `
+                <tr>
+                  <td>${item.product.name}</td>
+                  <td>${item.quantity}</td>
+                  <td>$${item.product.price.toFixed(2)}</td>
+                  <td>$${(item.product.price * item.quantity).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="total-section">
+            <div class="total-line">Subtotal: $${total.toFixed(2)}</div>
+            <div class="total-line">Tax (8%): $${tax.toFixed(2)}</div>
+            <div class="final-total">Total: $${finalTotal.toFixed(2)}</div>
+          </div>
+
+          <div class="footer">
+            <p>Thank you for your business!</p>
+            <p>Visit us again soon!</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(invoiceHTML);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const handleClose = () => {
+    setShowSuccess(false);
+    onClose();
+    setCustomerName('');
+    setPaymentMethod('cash');
+    setOrderNumber('');
   };
 
   if (!isOpen) return null;
@@ -62,7 +142,23 @@ export function CheckoutModal({
             <Check className="text-green-600" size={40} />
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Order Successful!</h2>
-          <p className="text-gray-600">Your order has been processed successfully.</p>
+          <p className="text-gray-600 mb-4">Order #{orderNumber} has been processed successfully.</p>
+          
+          <div className="flex gap-3">
+            <button
+              onClick={printInvoice}
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+            >
+              <Printer size={20} />
+              Print Invoice
+            </button>
+            <button
+              onClick={handleClose}
+              className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -95,13 +191,8 @@ export function CheckoutModal({
                     <span className="font-medium text-gray-800">{item.product.name}</span>
                     <span className="text-gray-600 ml-2">×{item.quantity}</span>
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-gray-800">
-                      {formatPrice(item.product.price * item.quantity)}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {formatDualPrice(item.product.price * item.quantity)}
-                    </div>
+                  <div className="font-semibold text-gray-800">
+                    ${(item.product.price * item.quantity).toFixed(2)}
                   </div>
                 </div>
               ))}
@@ -109,18 +200,15 @@ export function CheckoutModal({
               <div className="border-t border-gray-200 pt-3 space-y-2">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal:</span>
-                  <span>{formatPrice(total)}</span>
+                  <span>${total.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Tax (8%):</span>
-                  <span>{formatPrice(tax)}</span>
+                  <span>${tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold text-gray-800 border-t border-gray-200 pt-2">
                   <span>Total:</span>
-                  <span>{formatPrice(finalTotal)}</span>
-                </div>
-                <div className="text-center text-sm text-gray-500">
-                  {formatDualPrice(finalTotal)}
+                  <span>${finalTotal.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -197,7 +285,7 @@ export function CheckoutModal({
                     Processing...
                   </div>
                 ) : (
-                  `Complete Order - ${formatPrice(finalTotal)}`
+                  `Complete Order - $${finalTotal.toFixed(2)}`
                 )}
               </button>
             </div>
