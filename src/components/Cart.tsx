@@ -1,7 +1,6 @@
 import React from 'react';
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { CartItem } from '../types';
-import { useCurrency } from '../contexts/CurrencyContext';
 
 interface CartProps {
   items: CartItem[];
@@ -11,7 +10,6 @@ interface CartProps {
 }
 
 export function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout }: CartProps) {
-  const { formatPrice, formatDualPrice } = useCurrency();
   const total = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
   if (items.length === 0) {
@@ -46,7 +44,7 @@ export function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout }: Cart
             <div className="flex justify-between items-start mb-2">
               <div className="flex-1">
                 <h3 className="font-medium text-gray-800">{item.product.name}</h3>
-                <p className="text-sm text-gray-600">{formatPrice(item.product.price)} each</p>
+                <p className="text-sm text-gray-600">${item.product.price.toFixed(2)} each</p>
               </div>
               <button
                 onClick={() => onRemoveItem(item.product.id)}
@@ -73,7 +71,7 @@ export function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout }: Cart
                 </button>
               </div>
               <span className="font-semibold text-lg">
-                {formatPrice(item.product.price * item.quantity)}
+                ${(item.product.price * item.quantity).toFixed(2)}
               </span>
             </div>
           </div>
@@ -81,17 +79,10 @@ export function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout }: Cart
       </div>
 
       <div className="border-t border-gray-200 pt-4">
-        <div className="mb-2">
-          <div className="flex justify-between items-center text-sm text-gray-600">
-            <span>Total:</span>
-            <span>{formatDualPrice(total)}</span>
-          </div>
-        </div>
-        
         <div className="flex justify-between items-center mb-4">
-          <span className="text-xl font-bold text-gray-800">Final Total:</span>
+          <span className="text-xl font-bold text-gray-800">Total:</span>
           <span className="text-2xl font-bold text-orange-600">
-            {formatPrice(total)}
+            ${total.toFixed(2)}
           </span>
         </div>
         
