@@ -60,6 +60,10 @@ function AppContent() {
 
   const handleCheckout = () => {
     if (cartItems.length === 0) return;
+    if (!user) {
+      setShowLogin(true);
+      return;
+    }
     setShowCheckout(true);
   };
 
@@ -84,7 +88,7 @@ function AppContent() {
     setShowAdmin(true);
   };
 
-  if (showAdmin && user && isAdmin) {
+  if (showAdmin) {
     return (
       <ProtectedRoute requireAdmin>
         <AdminDashboard onClose={() => setShowAdmin(false)} />
@@ -141,12 +145,7 @@ function AppContent() {
               <CurrencyToggle />
               
               {user ? (
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 bg-blue-100 px-3 py-2 rounded-full">
-                    <User className="text-blue-600\" size={16} />
-                    <span className="text-sm font-medium text-blue-800">{user.email}</span>
-                  </div>
-                  
+                <>
                   {isAdmin && (
                     <button
                       onClick={handleAdminAccess}
@@ -156,7 +155,6 @@ function AppContent() {
                       <span className="font-medium text-gray-700">Admin</span>
                     </button>
                   )}
-                  
                   <button
                     onClick={signOut}
                     className="flex items-center gap-2 bg-red-100 hover:bg-red-200 px-4 py-2 rounded-full transition-colors"
@@ -164,14 +162,14 @@ function AppContent() {
                     <LogOut className="text-red-600" size={20} />
                     <span className="font-medium text-red-700">Sign Out</span>
                   </button>
-                </div>
+                </>
               ) : (
                 <button
                   onClick={() => setShowLogin(true)}
                   className="flex items-center gap-2 bg-blue-100 hover:bg-blue-200 px-4 py-2 rounded-full transition-colors"
                 >
                   <LogIn className="text-blue-600" size={20} />
-                  <span className="font-medium text-blue-700">Admin Login</span>
+                  <span className="font-medium text-blue-700">Sign In</span>
                 </button>
               )}
               
@@ -212,6 +210,7 @@ function AppContent() {
             </div>
           </div>
         </div>
+
       </main>
 
       {/* Modals */}

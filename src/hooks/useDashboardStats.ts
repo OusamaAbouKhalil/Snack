@@ -69,14 +69,9 @@ export function useDashboardStats() {
       setStats({
         todaySales,
         todayOrders: todayOrders?.length || 0,
-<<<<<<< HEAD
-        totalCustomers: 0, // Mock data
-        lowStockItems: 0, // Mock data
-=======
         pendingOrders: pendingOrders?.length || 0,
         totalCustomers: 150, // Mock data
         lowStockItems: 3, // Mock data
->>>>>>> 609f4c15f299950890e8e44bb3772d19f92fea4d
         recentOrders: recentOrders || [],
         topProducts: []
       });
