@@ -7,10 +7,9 @@ interface MenuProps {
   categories: Category[];
   selectedCategory: string;
   onCategorySelect: (categoryId: string) => void;
-  onAddToCart: (product: Product) => void;
 }
 
-export function Menu({ products, categories, selectedCategory, onCategorySelect, onAddToCart }: MenuProps) {
+export function Menu({ products, categories, selectedCategory, onCategorySelect }: MenuProps) {
   const filteredProducts = selectedCategory === 'all' 
     ? products 
     : products.filter(product => product.category_id === selectedCategory);
@@ -18,7 +17,7 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect,
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Menu</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Our Menu</h2>
         
         <div className="flex flex-wrap gap-2">
           <button
@@ -53,7 +52,6 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect,
           <ProductCard
             key={product.id}
             product={product}
-            onAddToCart={onAddToCart}
           />
         ))}
       </div>

@@ -1,71 +1,16 @@
 import React, { useState } from 'react';
 import { Menu } from './components/Menu';
-import { Cart } from './components/Cart';
-import { CheckoutModal } from './components/CheckoutModal';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { LoginModal } from './components/auth/LoginModal';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useProducts } from './hooks/useProducts';
-import { useOrders } from './hooks/useOrders';
-import { Product, CartItem } from './types';
+import { Product } from './types';
 import { Coffee } from 'lucide-react';
 
 function GuestApp() {
   const { products, categories, loading, error } = useProducts();
-  const { createOrder, loading: orderLoading } = useOrders();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [showCheckout, setShowCheckout] = useState(false);
-
-  const addToCart = (product: Product) => {
-    setCartItems(prev => {
-      const existingItem = prev.find(item => item.product.id === product.id);
-      
-      if (existingItem) {
-        return prev.map(item =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      
-      return [...prev, { product, quantity: 1 }];
-    });
-  };
-
-  const updateQuantity = (productId: string, quantity: number) => {
-    if (quantity === 0) {
-      removeFromCart(productId);
-      return;
-    }
-    
-    setCartItems(prev =>
-      prev.map(item =>
-        item.product.id === productId
-          ? { ...item, quantity }
-          : item
-      )
-    );
-  };
-
-  const removeFromCart = (productId: string) => {
-    setCartItems(prev => prev.filter(item => item.product.id !== productId));
-  };
-
-  const handleCheckout = () => {
-    if (cartItems.length === 0) return;
-    setShowCheckout(true);
-  };
-
-  const handleOrderComplete = async (customerName: string, paymentMethod: string) => {
-    const orderId = await createOrder(cartItems, customerName, paymentMethod);
-    
-    if (orderId) {
-      setCartItems([]);
-      setShowCheckout(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -117,42 +62,13 @@ function GuestApp() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Menu Section */}
-          <div className="lg:col-span-2">
-            <Menu
-              products={products}
-              categories={categories}
-              selectedCategory={selectedCategory}
-              onCategorySelect={setSelectedCategory}
-              onAddToCart={addToCart}
-            />
-          </div>
-
-          {/* Cart Section */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-8">
-              <Cart
-                items={cartItems}
-                onUpdateQuantity={updateQuantity}
-                onRemoveItem={removeFromCart}
-                onCheckout={handleCheckout}
-              />
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Checkout Modal */}
-      {showCheckout && (
-        <CheckoutModal
-          isOpen={showCheckout}
-          onClose={() => setShowCheckout(false)}
-          cartItems={cartItems}
-          onOrderComplete={handleOrderComplete}
-          loading={orderLoading}
+        <Menu
+          products={products}
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onCategorySelect={setSelectedCategory}
         />
-      )}
+      </main>
     </div>
   );
 }
