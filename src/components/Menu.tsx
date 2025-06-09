@@ -17,15 +17,16 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Our Menu</h2>
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">Our Menu</h2>
+        <p className="text-gray-600 mb-6">Discover our delicious selection of crepes and treats</p>
         
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => onCategorySelect('all')}
-            className={`px-4 py-2 rounded-full font-medium transition-colors ${
+            className={`px-6 py-3 rounded-full font-medium transition-all duration-200 ${
               selectedCategory === 'all'
-                ? 'bg-orange-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-orange-500 text-white shadow-lg transform scale-105'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
             }`}
           >
             All Items
@@ -35,10 +36,10 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
             <button
               key={category.id}
               onClick={() => onCategorySelect(category.id)}
-              className={`px-4 py-2 rounded-full font-medium transition-colors ${
+              className={`px-6 py-3 rounded-full font-medium transition-all duration-200 ${
                 selectedCategory === category.id
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-orange-500 text-white shadow-lg transform scale-105'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
               }`}
             >
               {category.name}
@@ -58,7 +59,9 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
 
       {filteredProducts.length === 0 && (
         <div className="text-center py-12 text-gray-500">
-          <p className="text-lg">No products found in this category</p>
+          <div className="text-6xl mb-4">🍽️</div>
+          <p className="text-lg font-medium">No products found in this category</p>
+          <p className="text-sm">Try selecting a different category</p>
         </div>
       )}
     </div>

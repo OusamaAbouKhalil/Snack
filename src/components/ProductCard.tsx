@@ -7,8 +7,8 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-105">
-      <div className="aspect-video bg-gradient-to-br from-orange-100 to-yellow-100 flex items-center justify-center">
+    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 border border-gray-100">
+      <div className="aspect-video bg-gradient-to-br from-orange-100 to-yellow-100 flex items-center justify-center relative overflow-hidden">
         {product.image_url ? (
           <img
             src={product.image_url}
@@ -17,6 +17,13 @@ export function ProductCard({ product }: ProductCardProps) {
           />
         ) : (
           <div className="text-6xl">🥞</div>
+        )}
+        {!product.is_available && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+              Unavailable
+            </span>
+          </div>
         )}
       </div>
       
@@ -33,13 +40,17 @@ export function ProductCard({ product }: ProductCardProps) {
         
         <div className="flex items-center justify-between">
           <div className="text-orange-600">
-            <div className="text-lg font-bold">
+            <div className="text-xl font-bold">
               ${product.price.toFixed(2)}
             </div>
           </div>
           
-          <div className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-sm font-medium">
-            View Item
+          <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+            product.is_available 
+              ? 'bg-green-100 text-green-600' 
+              : 'bg-red-100 text-red-600'
+          }`}>
+            {product.is_available ? 'Available' : 'Unavailable'}
           </div>
         </div>
       </div>

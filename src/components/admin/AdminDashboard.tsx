@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, BarChart3, Package, Users, Settings, FileText, TrendingUp, ShoppingCart, Shield } from 'lucide-react';
+import { X, BarChart3, Package, Users, Settings, FileText, TrendingUp, ShoppingCart, Shield, Home } from 'lucide-react';
 import { Dashboard } from './Dashboard';
 import { ProductManagement } from './ProductManagement';
 import { CategoryManagement } from './CategoryManagement';
@@ -9,18 +9,20 @@ import { CustomerManagement } from './CustomerManagement';
 import { SettingsPanel } from './SettingsPanel';
 import { SalesReports } from './SalesReports';
 import { AdminUserManagement } from './AdminUserManagement';
+import { OrderManagement } from './OrderManagement';
 
 interface AdminDashboardProps {
   onClose: () => void;
 }
 
-type AdminView = 'dashboard' | 'products' | 'categories' | 'orders' | 'inventory' | 'customers' | 'settings' | 'reports' | 'admin-users';
+type AdminView = 'dashboard' | 'products' | 'categories' | 'orders' | 'order-management' | 'inventory' | 'customers' | 'settings' | 'reports' | 'admin-users';
 
 export function AdminDashboard({ onClose }: AdminDashboardProps) {
   const [activeView, setActiveView] = useState<AdminView>('dashboard');
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'order-management', label: 'Order Management', icon: ShoppingCart },
     { id: 'products', label: 'Products', icon: Package },
     { id: 'categories', label: 'Categories', icon: FileText },
     { id: 'orders', label: 'Order History', icon: ShoppingCart },
@@ -35,6 +37,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     switch (activeView) {
       case 'dashboard':
         return <Dashboard />;
+      case 'order-management':
+        return <OrderManagement />;
       case 'products':
         return <ProductManagement />;
       case 'categories':
@@ -66,8 +70,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Back to Main Site"
             >
-              <X size={20} />
+              <Home size={20} />
             </button>
           </div>
         </div>

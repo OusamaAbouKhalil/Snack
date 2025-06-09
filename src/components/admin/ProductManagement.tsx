@@ -62,18 +62,7 @@ export function ProductManagement() {
     }
 
     if (success) {
-      setShowForm(false);
-      setEditingProduct(null);
-      setImageFile(null);
-      setImagePreview('');
-      setFormData({
-        name: '',
-        description: '',
-        price: '',
-        category_id: '',
-        image_url: '',
-        is_available: true
-      });
+      resetForm();
       refetch();
     }
   };

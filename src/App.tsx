@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu } from './components/Menu';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { LoginModal } from './components/auth/LoginModal';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useProducts } from './hooks/useProducts';
-import { Product } from './types';
 import { Coffee } from 'lucide-react';
 
 function GuestApp() {
@@ -122,7 +121,34 @@ function AdminApp() {
 }
 
 function AppRouter() {
-  const isAdminRoute = window.location.pathname.startsWith('/admin');
+  const [isAdminRoute, setIsAdminRoute] = useState(false);
+
+  useEffect(() => {
+    const checkRoute = () => {
+      setIsAdminRoute(window.location.pathname.startsWith('/admin'));
+    };
+
+    checkRoute();
+    window.addEventListener('popstate', checkRoute);
+    
+    return () => window.removeEventListener('popstate', checkRoute);
+  }, []);
+
+  // Handle client-side routing
+  useEffect(() => {
+    const handleNavigation = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/admin')) {
+        setIsAdminRoute(true);
+      } else {
+        setIsAdminRoute(false);
+      }
+    };
+
+    // Listen for navigation changes
+    window.addEventListener('popstate', handleNavigation);
+    return () => window.removeEventListener('popstate', handleNavigation);
+  }, []);
   
   if (isAdminRoute) {
     return <AdminApp />;
