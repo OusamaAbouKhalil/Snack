@@ -15,6 +15,7 @@ export function useProducts() {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       // Fetch categories
       const { data: categoriesData, error: categoriesError } = await supabase
@@ -24,11 +25,10 @@ export function useProducts() {
 
       if (categoriesError) throw categoriesError;
 
-      // Fetch products
+      // Fetch all products (not just available ones for admin)
       const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('*')
-        .eq('is_available', true)
         .order('name', { ascending: true });
 
       if (productsError) throw productsError;
@@ -37,6 +37,7 @@ export function useProducts() {
       setProducts(productsData || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Error fetching data:', err);
     } finally {
       setLoading(false);
     }

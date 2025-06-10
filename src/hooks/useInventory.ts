@@ -3,16 +3,19 @@ import { supabase } from '../lib/supabase';
 
 interface InventoryItem {
   id: string;
+  product_id: string;
   name: string;
   description: string;
   price: number;
   category_name: string;
   stock_quantity: number;
+  min_stock_level: number;
 }
 
 export function useInventory() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchInventory();
@@ -21,33 +24,40 @@ export function useInventory() {
   const fetchInventory = async () => {
     try {
       setLoading(true);
+      setError(null);
 
-      // For now, we'll use products table and add mock stock quantities
-      // In a real implementation, you'd have a separate inventory table
-      const { data: products, error } = await supabase
-        .from('products')
+      const { data, error: fetchError } = await supabase
+        .from('inventory')
         .select(`
           id,
-          name,
-          description,
-          price,
-          categories (name)
+          product_id,
+          stock_quantity,
+          min_stock_level,
+          products (
+            name,
+            description,
+            price,
+            categories (name)
+          )
         `);
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
 
-      const inventoryData = products?.map(product => ({
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        category_name: (product.categories as any)?.name || 'Uncategorized',
-        stock_quantity: Math.floor(Math.random() * 50) + 5 // Mock stock quantity
+      const inventoryData = data?.map(item => ({
+        id: item.id,
+        product_id: item.product_id,
+        name: (item.products as any)?.name || 'Unknown Product',
+        description: (item.products as any)?.description || '',
+        price: (item.products as any)?.price || 0,
+        category_name: (item.products as any)?.categories?.name || 'Uncategorized',
+        stock_quantity: item.stock_quantity,
+        min_stock_level: item.min_stock_level
       })) || [];
 
       setInventory(inventoryData);
-    } catch (error) {
-      console.error('Error fetching inventory:', error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch inventory');
+      console.error('Error fetching inventory:', err);
     } finally {
       setLoading(false);
     }
@@ -55,21 +65,69 @@ export function useInventory() {
 
   const updateStock = async (productId: string, newStock: number): Promise<boolean> => {
     try {
-      // In a real implementation, you'd update an inventory table
-      // For now, we'll just update the local state
+      setError(null);
+
+      const { error } = await supabase
+        .from('inventory')
+        .update({ 
+          stock_quantity: newStock,
+          last_updated: new Date().toISOString()
+        })
+        .eq('product_id', productId);
+
+      if (error) throw error;
+
+      // Update local state
       setInventory(prev => 
         prev.map(item => 
-          item.id === productId 
+          item.product_id === productId 
             ? { ...item, stock_quantity: newStock }
             : item
         )
       );
+
       return true;
-    } catch (error) {
-      console.error('Error updating stock:', error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update stock');
+      console.error('Error updating stock:', err);
       return false;
     }
   };
 
-  return { inventory, loading, updateStock, refetch: fetchInventory };
+  const updateMinStockLevel = async (productId: string, minLevel: number): Promise<boolean> => {
+    try {
+      setError(null);
+
+      const { error } = await supabase
+        .from('inventory')
+        .update({ min_stock_level: minLevel })
+        .eq('product_id', productId);
+
+      if (error) throw error;
+
+      // Update local state
+      setInventory(prev => 
+        prev.map(item => 
+          item.product_id === productId 
+            ? { ...item, min_stock_level: minLevel }
+            : item
+        )
+      );
+
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update minimum stock level');
+      console.error('Error updating min stock level:', err);
+      return false;
+    }
+  };
+
+  return { 
+    inventory, 
+    loading, 
+    error, 
+    updateStock, 
+    updateMinStockLevel, 
+    refetch: fetchInventory 
+  };
 }

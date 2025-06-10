@@ -23,6 +23,7 @@ export function useCategoryManagement() {
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create category');
+      console.error('Error creating category:', err);
       return false;
     } finally {
       setLoading(false);
@@ -43,6 +44,7 @@ export function useCategoryManagement() {
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update category');
+      console.error('Error updating category:', err);
       return false;
     } finally {
       setLoading(false);
@@ -63,6 +65,7 @@ export function useCategoryManagement() {
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete category');
+      console.error('Error deleting category:', err);
       return false;
     } finally {
       setLoading(false);

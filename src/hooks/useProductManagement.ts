@@ -27,6 +27,7 @@ export function useProductManagement() {
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create product');
+      console.error('Error creating product:', err);
       return false;
     } finally {
       setLoading(false);
@@ -47,6 +48,7 @@ export function useProductManagement() {
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update product');
+      console.error('Error updating product:', err);
       return false;
     } finally {
       setLoading(false);
@@ -67,6 +69,7 @@ export function useProductManagement() {
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete product');
+      console.error('Error deleting product:', err);
       return false;
     } finally {
       setLoading(false);

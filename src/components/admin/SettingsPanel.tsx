@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Save, Percent, DollarSign, Store, Bell } from 'lucide-react';
+import { Save, Percent, DollarSign, Store, Bell, AlertCircle } from 'lucide-react';
 import { useSettings } from '../../hooks/useSettings';
 
 export function SettingsPanel() {
-  const { settings, loading, updateSettings } = useSettings();
+  const { settings, loading, error, updateSettings } = useSettings();
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     tax_rate: settings?.tax_rate?.toString() || '8',
     currency: settings?.currency || 'USD',
@@ -14,8 +15,24 @@ export function SettingsPanel() {
     low_stock_threshold: settings?.low_stock_threshold?.toString() || '10'
   });
 
+  // Update form data when settings load
+  React.useEffect(() => {
+    if (settings) {
+      setFormData({
+        tax_rate: settings.tax_rate.toString(),
+        currency: settings.currency,
+        store_name: settings.store_name,
+        store_address: settings.store_address,
+        store_phone: settings.store_phone,
+        loyalty_points_rate: settings.loyalty_points_rate.toString(),
+        low_stock_threshold: settings.low_stock_threshold.toString()
+      });
+    }
+  }, [settings]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
     
     const settingsData = {
       tax_rate: parseFloat(formData.tax_rate),
@@ -27,13 +44,29 @@ export function SettingsPanel() {
       low_stock_threshold: parseInt(formData.low_stock_threshold)
     };
 
-    await updateSettings(settingsData);
+    const success = await updateSettings(settingsData);
+    if (success) {
+      alert('Settings updated successfully!');
+    } else {
+      alert('Failed to update settings. Please try again.');
+    }
+    
+    setSaving(false);
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+        <AlertCircle size={20} />
+        Error: {error}
       </div>
     );
   }
@@ -65,6 +98,7 @@ export function SettingsPanel() {
                 value={formData.store_name}
                 onChange={(e) => setFormData({ ...formData, store_name: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                required
               />
             </div>
 
@@ -112,9 +146,12 @@ export function SettingsPanel() {
                 <input
                   type="number"
                   step="0.01"
+                  min="0"
+                  max="100"
                   value={formData.tax_rate}
                   onChange={(e) => setFormData({ ...formData, tax_rate: e.target.value })}
                   className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  required
                 />
                 <Percent className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
               </div>
@@ -133,6 +170,7 @@ export function SettingsPanel() {
                 <option value="EUR">EUR (€)</option>
                 <option value="GBP">GBP (£)</option>
                 <option value="CAD">CAD (C$)</option>
+                <option value="LBP">LBP (ل.ل)</option>
               </select>
             </div>
 
@@ -143,9 +181,11 @@ export function SettingsPanel() {
               <input
                 type="number"
                 step="0.1"
+                min="0"
                 value={formData.loyalty_points_rate}
                 onChange={(e) => setFormData({ ...formData, loyalty_points_rate: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                required
               />
               <p className="text-xs text-gray-500 mt-1">Points per dollar spent</p>
             </div>
@@ -168,9 +208,11 @@ export function SettingsPanel() {
               </label>
               <input
                 type="number"
+                min="0"
                 value={formData.low_stock_threshold}
                 onChange={(e) => setFormData({ ...formData, low_stock_threshold: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                required
               />
               <p className="text-xs text-gray-500 mt-1">Alert when stock falls below this number</p>
             </div>
@@ -181,10 +223,11 @@ export function SettingsPanel() {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+            disabled={saving}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save size={20} />
-            Save Settings
+            {saving ? 'Saving...' : 'Save Settings'}
           </button>
         </div>
       </form>

@@ -5,6 +5,7 @@ interface Customer {
   id: string;
   name: string;
   email: string;
+  phone: string;
   loyalty_points: number;
   total_orders: number;
   total_spent: number;
@@ -14,6 +15,7 @@ interface Customer {
 export function useCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCustomers();
@@ -22,63 +24,144 @@ export function useCustomers() {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
+      setError(null);
 
-      // For now, we'll create mock customer data
-      // In a real implementation, you'd have a customers table
-      const mockCustomers: Customer[] = [
-        {
-          id: '1',
-          name: 'John Smith',
-          email: 'john@example.com',
-          loyalty_points: 1250,
-          total_orders: 15,
-          total_spent: 187.50,
-          created_at: '2024-01-15T00:00:00Z'
-        },
-        {
-          id: '2',
-          name: 'Sarah Johnson',
-          email: 'sarah@example.com',
-          loyalty_points: 890,
-          total_orders: 12,
-          total_spent: 156.80,
-          created_at: '2024-02-01T00:00:00Z'
-        },
-        {
-          id: '3',
-          name: 'Mike Davis',
-          email: 'mike@example.com',
-          loyalty_points: 450,
-          total_orders: 8,
-          total_spent: 98.40,
-          created_at: '2024-03-10T00:00:00Z'
-        }
-      ];
+      const { data, error: fetchError } = await supabase
+        .from('customers')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      setCustomers(mockCustomers);
-    } catch (error) {
-      console.error('Error fetching customers:', error);
+      if (fetchError) throw fetchError;
+
+      // Calculate total orders and spent for each customer
+      const customersWithStats = await Promise.all(
+        (data || []).map(async (customer) => {
+          const { data: orders } = await supabase
+            .from('orders')
+            .select('total_amount')
+            .eq('customer_name', customer.name);
+
+          const totalOrders = orders?.length || 0;
+          const totalSpent = orders?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
+
+          return {
+            ...customer,
+            total_orders: totalOrders,
+            total_spent: totalSpent
+          };
+        })
+      );
+
+      setCustomers(customersWithStats);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch customers');
+      console.error('Error fetching customers:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const updateLoyaltyPoints = async (customerId: string, pointsToAdd: number): Promise<boolean> => {
+  const createCustomer = async (customerData: Omit<Customer, 'id' | 'total_orders' | 'total_spent' | 'created_at'>): Promise<boolean> => {
     try {
-      // In a real implementation, you'd update the database
-      setCustomers(prev => 
-        prev.map(customer => 
-          customer.id === customerId 
-            ? { ...customer, loyalty_points: customer.loyalty_points + pointsToAdd }
-            : customer
-        )
-      );
+      setError(null);
+
+      const { error } = await supabase
+        .from('customers')
+        .insert(customerData);
+
+      if (error) throw error;
+
+      await fetchCustomers(); // Refresh the list
       return true;
-    } catch (error) {
-      console.error('Error updating loyalty points:', error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create customer');
+      console.error('Error creating customer:', err);
       return false;
     }
   };
 
-  return { customers, loading, updateLoyaltyPoints, refetch: fetchCustomers };
+  const updateCustomer = async (customerId: string, customerData: Partial<Customer>): Promise<boolean> => {
+    try {
+      setError(null);
+
+      const { error } = await supabase
+        .from('customers')
+        .update(customerData)
+        .eq('id', customerId);
+
+      if (error) throw error;
+
+      await fetchCustomers(); // Refresh the list
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update customer');
+      console.error('Error updating customer:', err);
+      return false;
+    }
+  };
+
+  const deleteCustomer = async (customerId: string): Promise<boolean> => {
+    try {
+      setError(null);
+
+      const { error } = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', customerId);
+
+      if (error) throw error;
+
+      await fetchCustomers(); // Refresh the list
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete customer');
+      console.error('Error deleting customer:', err);
+      return false;
+    }
+  };
+
+  const updateLoyaltyPoints = async (customerId: string, pointsToAdd: number): Promise<boolean> => {
+    try {
+      setError(null);
+
+      // Get current points
+      const customer = customers.find(c => c.id === customerId);
+      if (!customer) return false;
+
+      const newPoints = customer.loyalty_points + pointsToAdd;
+
+      const { error } = await supabase
+        .from('customers')
+        .update({ loyalty_points: newPoints })
+        .eq('id', customerId);
+
+      if (error) throw error;
+
+      // Update local state
+      setCustomers(prev => 
+        prev.map(c => 
+          c.id === customerId 
+            ? { ...c, loyalty_points: newPoints }
+            : c
+        )
+      );
+
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update loyalty points');
+      console.error('Error updating loyalty points:', err);
+      return false;
+    }
+  };
+
+  return { 
+    customers, 
+    loading, 
+    error, 
+    createCustomer,
+    updateCustomer,
+    deleteCustomer,
+    updateLoyaltyPoints, 
+    refetch: fetchCustomers 
+  };
 }

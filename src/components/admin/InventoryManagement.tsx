@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Package, AlertTriangle, Plus, Edit, TrendingDown } from 'lucide-react';
+import { Package, AlertTriangle, Plus, Edit, TrendingDown, Save, X } from 'lucide-react';
 import { useInventory } from '../../hooks/useInventory';
 
 export function InventoryManagement() {
-  const { inventory, loading, updateStock } = useInventory();
+  const { inventory, loading, error, updateStock, updateMinStockLevel } = useInventory();
   const [editingItem, setEditingItem] = useState<string | null>(null);
+  const [editingMinStock, setEditingMinStock] = useState<string | null>(null);
   const [newStock, setNewStock] = useState('');
+  const [newMinStock, setNewMinStock] = useState('');
 
   const handleUpdateStock = async (productId: string) => {
     const stock = parseInt(newStock);
@@ -18,9 +20,20 @@ export function InventoryManagement() {
     }
   };
 
-  const getStockStatus = (stock: number) => {
+  const handleUpdateMinStock = async (productId: string) => {
+    const minStock = parseInt(newMinStock);
+    if (isNaN(minStock) || minStock < 0) return;
+
+    const success = await updateMinStockLevel(productId, minStock);
+    if (success) {
+      setEditingMinStock(null);
+      setNewMinStock('');
+    }
+  };
+
+  const getStockStatus = (stock: number, minLevel: number) => {
     if (stock === 0) return { label: 'Out of Stock', color: 'bg-red-100 text-red-800' };
-    if (stock <= 10) return { label: 'Low Stock', color: 'bg-yellow-100 text-yellow-800' };
+    if (stock <= minLevel) return { label: 'Low Stock', color: 'bg-yellow-100 text-yellow-800' };
     return { label: 'In Stock', color: 'bg-green-100 text-green-800' };
   };
 
@@ -31,6 +44,17 @@ export function InventoryManagement() {
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        Error: {error}
+      </div>
+    );
+  }
+
+  const lowStockCount = inventory.filter(item => item.stock_quantity <= item.min_stock_level && item.stock_quantity > 0).length;
+  const outOfStockCount = inventory.filter(item => item.stock_quantity === 0).length;
 
   return (
     <div className="space-y-6">
@@ -62,9 +86,7 @@ export function InventoryManagement() {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600">Low Stock Items</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {inventory.filter(item => item.stock_quantity <= 10 && item.stock_quantity > 0).length}
-              </p>
+              <p className="text-2xl font-bold text-gray-900">{lowStockCount}</p>
             </div>
           </div>
         </div>
@@ -76,9 +98,7 @@ export function InventoryManagement() {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600">Out of Stock</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {inventory.filter(item => item.stock_quantity === 0).length}
-              </p>
+              <p className="text-2xl font-bold text-gray-900">{outOfStockCount}</p>
             </div>
           </div>
         </div>
@@ -104,6 +124,9 @@ export function InventoryManagement() {
                   Current Stock
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Min Level
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -116,7 +139,7 @@ export function InventoryManagement() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {inventory.map((item) => {
-                const status = getStockStatus(item.stock_quantity);
+                const status = getStockStatus(item.stock_quantity, item.min_stock_level);
                 return (
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -134,7 +157,7 @@ export function InventoryManagement() {
                       <div className="text-gray-900">{item.category_name}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {editingItem === item.id ? (
+                      {editingItem === item.product_id ? (
                         <div className="flex items-center gap-2">
                           <input
                             type="number"
@@ -144,23 +167,75 @@ export function InventoryManagement() {
                             min="0"
                           />
                           <button
-                            onClick={() => handleUpdateStock(item.id)}
-                            className="text-green-600 hover:text-green-800 text-sm"
+                            onClick={() => handleUpdateStock(item.product_id)}
+                            className="text-green-600 hover:text-green-800 p-1"
                           >
-                            Save
+                            <Save size={16} />
                           </button>
                           <button
                             onClick={() => {
                               setEditingItem(null);
                               setNewStock('');
                             }}
-                            className="text-gray-600 hover:text-gray-800 text-sm"
+                            className="text-gray-600 hover:text-gray-800 p-1"
                           >
-                            Cancel
+                            <X size={16} />
                           </button>
                         </div>
                       ) : (
-                        <div className="font-semibold text-gray-900">{item.stock_quantity}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-gray-900">{item.stock_quantity}</span>
+                          <button
+                            onClick={() => {
+                              setEditingItem(item.product_id);
+                              setNewStock(item.stock_quantity.toString());
+                            }}
+                            className="text-orange-600 hover:text-orange-800 p-1"
+                          >
+                            <Edit size={16} />
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {editingMinStock === item.product_id ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={newMinStock}
+                            onChange={(e) => setNewMinStock(e.target.value)}
+                            className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                            min="0"
+                          />
+                          <button
+                            onClick={() => handleUpdateMinStock(item.product_id)}
+                            className="text-green-600 hover:text-green-800 p-1"
+                          >
+                            <Save size={16} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingMinStock(null);
+                              setNewMinStock('');
+                            }}
+                            className="text-gray-600 hover:text-gray-800 p-1"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-900">{item.min_stock_level}</span>
+                          <button
+                            onClick={() => {
+                              setEditingMinStock(item.product_id);
+                              setNewMinStock(item.min_stock_level.toString());
+                            }}
+                            className="text-orange-600 hover:text-orange-800 p-1"
+                          >
+                            <Edit size={16} />
+                          </button>
+                        </div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -172,15 +247,18 @@ export function InventoryManagement() {
                       <div className="font-semibold text-gray-900">${item.price.toFixed(2)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => {
-                          setEditingItem(item.id);
-                          setNewStock(item.stock_quantity.toString());
-                        }}
-                        className="text-orange-600 hover:text-orange-900 p-1"
-                      >
-                        <Edit size={16} />
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingItem(item.product_id);
+                            setNewStock(item.stock_quantity.toString());
+                          }}
+                          className="text-orange-600 hover:text-orange-900 p-1"
+                          title="Edit Stock"
+                        >
+                          <Edit size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
