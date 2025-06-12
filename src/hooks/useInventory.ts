@@ -10,7 +10,6 @@ interface InventoryItem {
   category_name: string;
   stock_quantity: number;
   min_stock_level: number;
-  last_updated: string;
 }
 
 export function useInventory() {
@@ -34,7 +33,6 @@ export function useInventory() {
           product_id,
           stock_quantity,
           min_stock_level,
-          last_updated,
           products (
             name,
             description,
@@ -53,8 +51,7 @@ export function useInventory() {
         price: (item.products as any)?.price || 0,
         category_name: (item.products as any)?.categories?.name || 'Uncategorized',
         stock_quantity: item.stock_quantity,
-        min_stock_level: item.min_stock_level,
-        last_updated: item.last_updated
+        min_stock_level: item.min_stock_level
       })) || [];
 
       setInventory(inventoryData);
@@ -70,11 +67,6 @@ export function useInventory() {
     try {
       setError(null);
 
-      if (newStock < 0) {
-        setError('Stock quantity cannot be negative');
-        return false;
-      }
-
       const { error } = await supabase
         .from('inventory')
         .update({ 
@@ -85,10 +77,11 @@ export function useInventory() {
 
       if (error) throw error;
 
+      // Update local state
       setInventory(prev => 
         prev.map(item => 
           item.product_id === productId 
-            ? { ...item, stock_quantity: newStock, last_updated: new Date().toISOString() }
+            ? { ...item, stock_quantity: newStock }
             : item
         )
       );
@@ -105,11 +98,6 @@ export function useInventory() {
     try {
       setError(null);
 
-      if (minLevel < 0) {
-        setError('Minimum stock level cannot be negative');
-        return false;
-      }
-
       const { error } = await supabase
         .from('inventory')
         .update({ min_stock_level: minLevel })
@@ -117,6 +105,7 @@ export function useInventory() {
 
       if (error) throw error;
 
+      // Update local state
       setInventory(prev => 
         prev.map(item => 
           item.product_id === productId 

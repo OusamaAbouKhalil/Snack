@@ -14,7 +14,6 @@ export function useOrderHistory() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      setError(null);
       
       const { data, error: fetchError } = await supabase
         .from('orders')
@@ -25,7 +24,6 @@ export function useOrderHistory() {
       setOrders(data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch orders');
-      console.error('Error fetching orders:', err);
     } finally {
       setLoading(false);
     }
@@ -33,13 +31,6 @@ export function useOrderHistory() {
 
   const updateOrderStatus = async (orderId: string, status: string): Promise<boolean> => {
     try {
-      setError(null);
-
-      if (!['pending', 'completed', 'cancelled'].includes(status)) {
-        setError('Invalid order status');
-        return false;
-      }
-
       const { error } = await supabase
         .from('orders')
         .update({ status })
@@ -58,46 +49,10 @@ export function useOrderHistory() {
       
       return true;
     } catch (error) {
-      setError('Failed to update order status');
       console.error('Error updating order status:', error);
       return false;
     }
   };
 
-  const deleteOrder = async (orderId: string): Promise<boolean> => {
-    try {
-      setError(null);
-
-      // Delete order items first (should cascade, but being explicit)
-      await supabase
-        .from('order_items')
-        .delete()
-        .eq('order_id', orderId);
-
-      // Delete order
-      const { error } = await supabase
-        .from('orders')
-        .delete()
-        .eq('id', orderId);
-
-      if (error) throw error;
-
-      // Update local state
-      setOrders(prev => prev.filter(order => order.id !== orderId));
-      return true;
-    } catch (error) {
-      setError('Failed to delete order');
-      console.error('Error deleting order:', error);
-      return false;
-    }
-  };
-
-  return { 
-    orders, 
-    loading, 
-    error, 
-    updateOrderStatus, 
-    deleteOrder,
-    refetch: fetchOrders 
-  };
+  return { orders, loading, error, updateOrderStatus, refetch: fetchOrders };
 }

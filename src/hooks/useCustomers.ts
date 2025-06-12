@@ -12,13 +12,6 @@ interface Customer {
   created_at: string;
 }
 
-interface CustomerFormData {
-  name: string;
-  email: string;
-  phone: string;
-  loyalty_points: number;
-}
-
 export function useCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,7 +61,7 @@ export function useCustomers() {
     }
   };
 
-  const createCustomer = async (customerData: CustomerFormData): Promise<boolean> => {
+  const createCustomer = async (customerData: Omit<Customer, 'id' | 'total_orders' | 'total_spent' | 'created_at'>): Promise<boolean> => {
     try {
       setError(null);
 
@@ -76,16 +69,9 @@ export function useCustomers() {
         .from('customers')
         .insert(customerData);
 
-      if (error) {
-        if (error.code === '23505') {
-          setError('A customer with this email already exists.');
-        } else {
-          throw error;
-        }
-        return false;
-      }
+      if (error) throw error;
 
-      await fetchCustomers();
+      await fetchCustomers(); // Refresh the list
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create customer');
@@ -94,7 +80,7 @@ export function useCustomers() {
     }
   };
 
-  const updateCustomer = async (customerId: string, customerData: Partial<CustomerFormData>): Promise<boolean> => {
+  const updateCustomer = async (customerId: string, customerData: Partial<Customer>): Promise<boolean> => {
     try {
       setError(null);
 
@@ -103,16 +89,9 @@ export function useCustomers() {
         .update(customerData)
         .eq('id', customerId);
 
-      if (error) {
-        if (error.code === '23505') {
-          setError('A customer with this email already exists.');
-        } else {
-          throw error;
-        }
-        return false;
-      }
+      if (error) throw error;
 
-      await fetchCustomers();
+      await fetchCustomers(); // Refresh the list
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update customer');
@@ -132,7 +111,7 @@ export function useCustomers() {
 
       if (error) throw error;
 
-      await fetchCustomers();
+      await fetchCustomers(); // Refresh the list
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete customer');
@@ -145,13 +124,11 @@ export function useCustomers() {
     try {
       setError(null);
 
+      // Get current points
       const customer = customers.find(c => c.id === customerId);
-      if (!customer) {
-        setError('Customer not found');
-        return false;
-      }
+      if (!customer) return false;
 
-      const newPoints = Math.max(0, customer.loyalty_points + pointsToAdd);
+      const newPoints = customer.loyalty_points + pointsToAdd;
 
       const { error } = await supabase
         .from('customers')
@@ -160,6 +137,7 @@ export function useCustomers() {
 
       if (error) throw error;
 
+      // Update local state
       setCustomers(prev => 
         prev.map(c => 
           c.id === customerId 

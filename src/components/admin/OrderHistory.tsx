@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Search, Calendar, Filter, Eye, Download, Check, X, Clock, Trash2 } from 'lucide-react';
+import { Search, Calendar, Filter, Eye, Download, Check, X, Clock } from 'lucide-react';
 import { useOrderHistory } from '../../hooks/useOrderHistory';
 import { OrderDetailsModal } from './OrderDetailsModal';
 
 export function OrderHistory() {
-  const { orders, loading, error, updateOrderStatus, deleteOrder, refetch } = useOrderHistory();
+  const { orders, loading, updateOrderStatus, refetch } = useOrderHistory();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
@@ -39,29 +39,12 @@ export function OrderHistory() {
     }
   };
 
-  const handleDeleteOrder = async (orderId: string) => {
-    if (window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
-      const success = await deleteOrder(orderId);
-      if (success) {
-        refetch();
-      }
-    }
-  };
-
   const pendingCount = orders.filter(order => order.status === 'pending').length;
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-        Error: {error}
       </div>
     );
   }
@@ -183,7 +166,6 @@ export function OrderHistory() {
                       <button
                         onClick={() => setSelectedOrder(order.id)}
                         className="text-orange-600 hover:text-orange-900 p-1"
-                        title="View Details"
                       >
                         <Eye size={16} />
                       </button>
@@ -192,26 +174,17 @@ export function OrderHistory() {
                           <button
                             onClick={() => handleStatusChange(order.id, 'completed')}
                             className="text-green-600 hover:text-green-900 p-1"
-                            title="Mark as Completed"
                           >
                             <Check size={16} />
                           </button>
                           <button
                             onClick={() => handleStatusChange(order.id, 'cancelled')}
                             className="text-red-600 hover:text-red-900 p-1"
-                            title="Cancel Order"
                           >
                             <X size={16} />
                           </button>
                         </>
                       )}
-                      <button
-                        onClick={() => handleDeleteOrder(order.id)}
-                        className="text-red-600 hover:text-red-900 p-1"
-                        title="Delete Order"
-                      >
-                        <Trash2 size={16} />
-                      </button>
                     </div>
                   </td>
                 </tr>
