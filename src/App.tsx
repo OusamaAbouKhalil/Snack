@@ -137,8 +137,8 @@ function AppRouter() {
   // Handle client-side routing
   useEffect(() => {
     const handleNavigation = () => {
-      const path = window.location.pathname;
-      if (path.startsWith('/admin')) {
+      const path = window.location;
+      if (path.pathname.indexOf('/admin')) {
         setIsAdminRoute(true);
       } else {
         setIsAdminRoute(false);
