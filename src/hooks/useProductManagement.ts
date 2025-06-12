@@ -19,11 +19,25 @@ export function useProductManagement() {
       setLoading(true);
       setError(null);
 
-      const { error: createError } = await supabase
+      const { data, error: createError } = await supabase
         .from('products')
-        .insert(productData);
+        .insert(productData)
+        .select()
+        .single();
 
       if (createError) throw createError;
+
+      // Create inventory record for new product
+      if (data) {
+        await supabase
+          .from('inventory')
+          .insert({
+            product_id: data.id,
+            stock_quantity: 0,
+            min_stock_level: 10
+          });
+      }
+
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create product');
@@ -60,6 +74,13 @@ export function useProductManagement() {
       setLoading(true);
       setError(null);
 
+      // Delete inventory record first (cascade should handle this, but being explicit)
+      await supabase
+        .from('inventory')
+        .delete()
+        .eq('product_id', productId);
+
+      // Delete product
       const { error: deleteError } = await supabase
         .from('products')
         .delete()

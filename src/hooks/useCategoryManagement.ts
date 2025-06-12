@@ -56,6 +56,19 @@ export function useCategoryManagement() {
       setLoading(true);
       setError(null);
 
+      // Check if category has products
+      const { data: products, error: checkError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('category_id', categoryId);
+
+      if (checkError) throw checkError;
+
+      if (products && products.length > 0) {
+        setError('Cannot delete category with existing products. Please move or delete products first.');
+        return false;
+      }
+
       const { error: deleteError } = await supabase
         .from('categories')
         .delete()

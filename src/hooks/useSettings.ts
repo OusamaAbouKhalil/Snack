@@ -37,15 +37,15 @@ export function useSettings() {
         settingsObj[setting.key] = setting.value;
       });
 
-      // Parse numeric values
+      // Parse numeric values with validation
       const parsedSettings: Settings = {
-        tax_rate: parseFloat(settingsObj.tax_rate || '8.0'),
+        tax_rate: Math.max(0, parseFloat(settingsObj.tax_rate || '8.0')),
         currency: settingsObj.currency || 'USD',
         store_name: settingsObj.store_name || 'Crêpe Café',
         store_address: settingsObj.store_address || '',
         store_phone: settingsObj.store_phone || '',
-        loyalty_points_rate: parseFloat(settingsObj.loyalty_points_rate || '1.0'),
-        low_stock_threshold: parseInt(settingsObj.low_stock_threshold || '10')
+        loyalty_points_rate: Math.max(0, parseFloat(settingsObj.loyalty_points_rate || '1.0')),
+        low_stock_threshold: Math.max(0, parseInt(settingsObj.low_stock_threshold || '10'))
       };
 
       setSettings(parsedSettings);
@@ -62,8 +62,29 @@ export function useSettings() {
       setLoading(true);
       setError(null);
 
+      // Validate settings before updating
+      const validatedSettings: any = {};
+      
+      Object.entries(newSettings).forEach(([key, value]) => {
+        if (key === 'tax_rate' || key === 'loyalty_points_rate') {
+          const numValue = parseFloat(value as string);
+          if (isNaN(numValue) || numValue < 0) {
+            throw new Error(`${key} must be a valid positive number`);
+          }
+          validatedSettings[key] = numValue;
+        } else if (key === 'low_stock_threshold') {
+          const numValue = parseInt(value as string);
+          if (isNaN(numValue) || numValue < 0) {
+            throw new Error(`${key} must be a valid positive integer`);
+          }
+          validatedSettings[key] = numValue;
+        } else {
+          validatedSettings[key] = value;
+        }
+      });
+
       // Convert settings object to array of key-value pairs for upsert
-      const updates = Object.entries(newSettings).map(([key, value]) => ({
+      const updates = Object.entries(validatedSettings).map(([key, value]) => ({
         key,
         value: value.toString(),
         updated_at: new Date().toISOString()
@@ -79,7 +100,7 @@ export function useSettings() {
       }
 
       // Update local state
-      setSettings(prev => prev ? { ...prev, ...newSettings } : null);
+      setSettings(prev => prev ? { ...prev, ...validatedSettings } : null);
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update settings');
