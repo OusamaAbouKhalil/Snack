@@ -1,12 +1,15 @@
 name = "beesweet"
 compatibility_date = "2025-06-08"
 
+type = "javascript"
+
+[build]
+command = "npm run build"
+upload_format = "modules"
+
 [site]
 bucket = "./dist"
 entry-point = "."
-
-[build]
-command = "npm run build"  # or your build command
 
 [env.production.vars]
 NODE_ENV = "production"

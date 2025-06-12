@@ -119,12 +119,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           </form>
 
           <div className="mt-6 text-center">
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-orange-600 hover:text-orange-700 font-medium"
-            >
-              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-            </button>
+         
           </div>
         </div>
       </div>
