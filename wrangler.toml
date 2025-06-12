@@ -1,5 +1,6 @@
 name = "beesweet"
 compatibility_date = "2025-06-08"
+workers_dev = true
 
 type = "javascript"
 
