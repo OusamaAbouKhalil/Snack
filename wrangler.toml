@@ -9,7 +9,7 @@ upload_format = "modules"
 
 [site]
 bucket = "./dist"
-entry-point = "."
+entry-point = "workers-site"
 
 [env.production.vars]
 NODE_ENV = "production"
