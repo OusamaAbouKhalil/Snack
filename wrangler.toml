@@ -1,6 +1,5 @@
 name = "beesweet"
 compatibility_date = "2025-06-08"
-workers_dev = true
 
 type = "javascript"
 
@@ -10,7 +9,7 @@ upload_format = "modules"
 
 [site]
 bucket = "./dist"
-entry-point = "workers-site"
+entry-point = "."
 
 [env.production.vars]
 NODE_ENV = "production"
