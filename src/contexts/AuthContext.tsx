@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      checkAdminStatus(session?.user ?? null);
+      checkAdminStatus(session?.user);
       setLoading(false);
     });
 
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        checkAdminStatus(session?.user ?? null);
+        checkAdminStatus(session?.user);
         setLoading(false);
       }
     );
