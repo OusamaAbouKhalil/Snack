@@ -9,10 +9,6 @@
     {
       "pattern": "beesweet.ousamaaboukhalil.workers.dev/*",
       "script": "beesweet"
-    },
-    {
-      "pattern": "beesweet.ousamaaboukhalil.workers.dev/admin/*",
-      "script": "beesweet"
     }
   ]
 }
