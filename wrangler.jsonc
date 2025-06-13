@@ -3,5 +3,16 @@
   "compatibility_date": "2025-06-08",
   "assets": {
     "directory": "./dist"
-  }
+  },
+  //workers routes example https://beesweet.ousamaaboukhalil.workers.dev/admin and https://beesweet.ousamaaboukhalil.workers.dev\
+    "routes": [
+    {
+      "pattern": "beesweet.ousamaaboukhalil.workers.dev/*",
+      "script": "beesweet"
+    },
+    {
+      "pattern": "beesweet.ousamaaboukhalil.workers.dev/admin/*",
+      "script": "beesweet"
+    }
+  ]
 }
