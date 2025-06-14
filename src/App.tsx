@@ -53,15 +53,6 @@ function GuestApp() {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Crêpe Café</h1>
                 <p className="text-sm text-gray-600">Delicious Crepes & More</p>
-                {/* Icon to navigate to admin */}
-                <a 
-                  href="/admin" 
-                  className="text-orange-500 hover:text-orange-600 transition-colors"
-                  title="Admin Dashboard"
-                >
-                  <Coffee className="inline-block w-5 h-5" />
-                </a>
-                
               </div>
             </div>
           </div>

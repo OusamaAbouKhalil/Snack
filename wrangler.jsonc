@@ -4,6 +4,4 @@
   "assets": {
     "directory": "./dist"
   }
-  //  /admin giving access to the admin panel is 404 error 
-  //zone is the domain name
 }
