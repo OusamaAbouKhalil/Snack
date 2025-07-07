@@ -1,11 +1,26 @@
 import React from 'react';
 import { Product } from '../types';
+import { useSettings } from '../hooks/useSettings';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const { settings } = useSettings();
+
+  const formatDualCurrency = (priceUSD: number) => {
+    const exchangeRate = settings?.usd_to_lbp_rate || 89500;
+    const priceLBP = priceUSD * exchangeRate;
+    
+    return {
+      usd: `$${priceUSD.toFixed(2)}`,
+      lbp: `${Math.round(priceLBP).toLocaleString()} ل.ل`
+    };
+  };
+
+  const prices = formatDualCurrency(product.price);
+
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 border border-gray-100">
       <div className="aspect-video bg-gradient-to-br from-orange-100 to-yellow-100 flex items-center justify-center relative overflow-hidden">
@@ -16,7 +31,7 @@ export function ProductCard({ product }: ProductCardProps) {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="text-6xl">🥞</div>
+          <div className="text-6xl">🍽️</div>
         )}
         {!product.is_available && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -40,8 +55,11 @@ export function ProductCard({ product }: ProductCardProps) {
         
         <div className="flex items-center justify-between">
           <div className="text-orange-600">
-            <div className="text-xl font-bold">
-              ${product.price.toFixed(2)}
+            <div className="text-lg font-bold">
+              {prices.usd}
+            </div>
+            <div className="text-sm font-medium text-gray-600">
+              {prices.lbp}
             </div>
           </div>
           

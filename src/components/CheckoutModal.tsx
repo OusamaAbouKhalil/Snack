@@ -32,9 +32,20 @@ export function CheckoutModal({
   const formatCurrency = (amount: number) => {
     const currency = settings?.currency || 'USD';
     if (currency === 'LBP') {
-      return `${amount.toLocaleString()} ل.ل`;
+      const exchangeRate = settings?.usd_to_lbp_rate || 89500;
+      const lbpAmount = amount * exchangeRate;
+      return `${Math.round(lbpAmount).toLocaleString()} ل.ل`;
     }
     return `$${amount.toFixed(2)}`;
+  };
+
+  const formatDualCurrency = (amountUSD: number) => {
+    const exchangeRate = settings?.usd_to_lbp_rate || 89500;
+    const amountLBP = amountUSD * exchangeRate;
+    return {
+      usd: `$${amountUSD.toFixed(2)}`,
+      lbp: `${Math.round(amountLBP).toLocaleString()} ل.ل`
+    };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,14 +74,7 @@ export function CheckoutModal({
     const storeName = settings?.store_name || 'CraveBites';
     const storeAddress = settings?.store_address || '';
     const storePhone = settings?.store_phone || '';
-    const currency = settings?.currency || 'USD';
-
-    const formatPrintCurrency = (amount: number) => {
-      if (currency === 'LBP') {
-        return `${Math.round(amount).toLocaleString()} ل.ل`;
-      }
-      return `$${amount.toFixed(2)}`;
-    };
+    const exchangeRate = settings?.usd_to_lbp_rate || 89500;
 
     const invoiceHTML = `
       <!DOCTYPE html>
@@ -110,27 +114,31 @@ export function CheckoutModal({
               margin-bottom: 8px; 
               font-size: 11px;
             }
+            .exchange-rate {
+              font-size: 10px;
+              text-align: center;
+              margin-bottom: 8px;
+              color: #666;
+            }
             .items-table { 
               width: 100%; 
               margin-bottom: 8px; 
               font-size: 11px;
             }
             .item-row {
+              margin-bottom: 4px;
+              border-bottom: 1px dotted #ccc;
+              padding-bottom: 2px;
+            }
+            .item-header {
               display: flex;
               justify-content: space-between;
-              margin-bottom: 2px;
+              font-weight: bold;
             }
-            .item-name {
-              flex: 1;
-              padding-right: 4px;
-            }
-            .item-qty {
-              width: 20px;
-              text-align: center;
-            }
-            .item-price {
-              width: 60px;
-              text-align: right;
+            .item-details {
+              font-size: 10px;
+              color: #666;
+              margin-top: 1px;
             }
             .separator {
               border-top: 1px dashed #000;
@@ -143,6 +151,11 @@ export function CheckoutModal({
               display: flex;
               justify-content: space-between;
               margin: 2px 0; 
+            }
+            .dual-currency {
+              font-size: 10px;
+              color: #666;
+              text-align: right;
             }
             .final-total { 
               font-weight: bold; 
@@ -175,33 +188,54 @@ export function CheckoutModal({
             <div><strong>Payment:</strong> ${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}</div>
           </div>
 
+          <div class="exchange-rate">
+            Exchange Rate: $1 = ${exchangeRate.toLocaleString()} ل.ل
+          </div>
+
           <div class="separator"></div>
 
           <div class="items-table">
-            ${cartItems.map(item => `
-              <div class="item-row">
-                <div class="item-name">${item.product.name}</div>
-                <div class="item-qty">${item.quantity}</div>
-                <div class="item-price">${formatPrintCurrency(item.product.price * item.quantity)}</div>
-              </div>
-              <div style="font-size: 10px; color: #666; margin-bottom: 4px;">
-                ${formatPrintCurrency(item.product.price)} x ${item.quantity}
-              </div>
-            `).join('')}
+            ${cartItems.map(item => {
+              const itemTotalUSD = item.product.price * item.quantity;
+              const itemTotalLBP = itemTotalUSD * exchangeRate;
+              const unitPriceLBP = item.product.price * exchangeRate;
+              
+              return `
+                <div class="item-row">
+                  <div class="item-header">
+                    <span>${item.product.name} x${item.quantity}</span>
+                    <span>$${itemTotalUSD.toFixed(2)}</span>
+                  </div>
+                  <div class="item-details">
+                    $${item.product.price.toFixed(2)} (${Math.round(unitPriceLBP).toLocaleString()} ل.ل) each
+                  </div>
+                  <div class="dual-currency">
+                    ${Math.round(itemTotalLBP).toLocaleString()} ل.ل
+                  </div>
+                </div>
+              `;
+            }).join('')}
           </div>
 
           <div class="total-section">
             <div class="total-line">
               <span>Subtotal:</span>
-              <span>${formatPrintCurrency(total)}</span>
+              <span>$${total.toFixed(2)}</span>
             </div>
+            <div class="dual-currency">${Math.round(total * exchangeRate).toLocaleString()} ل.ل</div>
+            
             <div class="total-line">
               <span>Tax (${(taxRate * 100).toFixed(1)}%):</span>
-              <span>${formatPrintCurrency(tax)}</span>
+              <span>$${tax.toFixed(2)}</span>
             </div>
+            <div class="dual-currency">${Math.round(tax * exchangeRate).toLocaleString()} ل.ل</div>
+            
             <div class="total-line final-total">
               <span>TOTAL:</span>
-              <span>${formatPrintCurrency(finalTotal)}</span>
+              <span>$${finalTotal.toFixed(2)}</span>
+            </div>
+            <div class="dual-currency" style="font-weight: bold; font-size: 12px;">
+              ${Math.round(finalTotal * exchangeRate).toLocaleString()} ل.ل
             </div>
           </div>
 
@@ -279,30 +313,44 @@ export function CheckoutModal({
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Order Summary</h3>
             <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-              {cartItems.map((item) => (
-                <div key={item.product.id} className="flex justify-between items-center">
-                  <div>
-                    <span className="font-medium text-gray-800">{item.product.name}</span>
-                    <span className="text-gray-600 ml-2">×{item.quantity}</span>
+              {cartItems.map((item) => {
+                const itemTotal = item.product.price * item.quantity;
+                const dualPrice = formatDualCurrency(itemTotal);
+                return (
+                  <div key={item.product.id} className="flex justify-between items-center">
+                    <div>
+                      <span className="font-medium text-gray-800">{item.product.name}</span>
+                      <span className="text-gray-600 ml-2">×{item.quantity}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-gray-800">{dualPrice.usd}</div>
+                      <div className="text-sm text-gray-600">{dualPrice.lbp}</div>
+                    </div>
                   </div>
-                  <div className="font-semibold text-gray-800">
-                    {formatCurrency(item.product.price * item.quantity)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               
               <div className="border-t border-gray-200 pt-3 space-y-2">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal:</span>
-                  <span>{formatCurrency(total)}</span>
+                  <div className="text-right">
+                    <div>{formatDualCurrency(total).usd}</div>
+                    <div className="text-sm">{formatDualCurrency(total).lbp}</div>
+                  </div>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Tax ({(taxRate * 100).toFixed(1)}%):</span>
-                  <span>{formatCurrency(tax)}</span>
+                  <div className="text-right">
+                    <div>{formatDualCurrency(tax).usd}</div>
+                    <div className="text-sm">{formatDualCurrency(tax).lbp}</div>
+                  </div>
                 </div>
                 <div className="flex justify-between text-lg font-bold text-gray-800 border-t border-gray-200 pt-2">
                   <span>Total:</span>
-                  <span>{formatCurrency(finalTotal)}</span>
+                  <div className="text-right">
+                    <div className="text-orange-600">{formatDualCurrency(finalTotal).usd}</div>
+                    <div className="text-sm text-gray-600">{formatDualCurrency(finalTotal).lbp}</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -379,7 +427,10 @@ export function CheckoutModal({
                     Processing...
                   </div>
                 ) : (
-                  `Complete Order - ${formatCurrency(finalTotal)}`
+                  <div className="text-center">
+                    <div>Complete Order</div>
+                    <div className="text-sm opacity-90">{formatDualCurrency(finalTotal).lbp}</div>
+                  </div>
                 )}
               </button>
             </div>
