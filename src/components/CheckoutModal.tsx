@@ -34,7 +34,7 @@ export function CheckoutModal({
     if (currency === 'LBP') {
       const exchangeRate = settings?.usd_to_lbp_rate || 89500;
       const lbpAmount = amount * exchangeRate;
-      return `${Math.round(lbpAmount).toLocaleString()} ل.ل`;
+      return `${Math.round(lbpAmount).toLocaleString()}`;
     }
     return `$${amount.toFixed(2)}`;
   };
@@ -44,7 +44,7 @@ export function CheckoutModal({
     const amountLBP = amountUSD * exchangeRate;
     return {
       usd: `$${amountUSD.toFixed(2)}`,
-      lbp: `${Math.round(amountLBP).toLocaleString()} ل.ل`
+      lbp: `${Math.round(amountLBP).toLocaleString()}`
     };
   };
 
@@ -189,7 +189,7 @@ export function CheckoutModal({
           </div>
 
           <div class="exchange-rate">
-            Exchange Rate: $1 = ${exchangeRate.toLocaleString()} ل.ل
+            Exchange Rate: $1 = ${exchangeRate.toLocaleString()}
           </div>
 
           <div class="separator"></div>
@@ -207,10 +207,10 @@ export function CheckoutModal({
                     <span>$${itemTotalUSD.toFixed(2)}</span>
                   </div>
                   <div class="item-details">
-                    $${item.product.price.toFixed(2)} (${Math.round(unitPriceLBP).toLocaleString()} ل.ل) each
+                    $${item.product.price.toFixed(2)} (${Math.round(unitPriceLBP).toLocaleString()}) each
                   </div>
                   <div class="dual-currency">
-                    ${Math.round(itemTotalLBP).toLocaleString()} ل.ل
+                    ${Math.round(itemTotalLBP).toLocaleString()}
                   </div>
                 </div>
               `;
@@ -222,20 +222,20 @@ export function CheckoutModal({
               <span>Subtotal:</span>
               <span>$${total.toFixed(2)}</span>
             </div>
-            <div class="dual-currency">${Math.round(total * exchangeRate).toLocaleString()} ل.ل</div>
+            <div class="dual-currency">${Math.round(total * exchangeRate).toLocaleString()}</div>
             
             <div class="total-line">
               <span>Tax (${(taxRate * 100).toFixed(1)}%):</span>
               <span>$${tax.toFixed(2)}</span>
             </div>
-            <div class="dual-currency">${Math.round(tax * exchangeRate).toLocaleString()} ل.ل</div>
+            <div class="dual-currency">${Math.round(tax * exchangeRate).toLocaleString()}</div>
             
             <div class="total-line final-total">
               <span>TOTAL:</span>
               <span>$${finalTotal.toFixed(2)}</span>
             </div>
             <div class="dual-currency" style="font-weight: bold; font-size: 12px;">
-              ${Math.round(finalTotal * exchangeRate).toLocaleString()} ل.ل
+              ${Math.round(finalTotal * exchangeRate).toLocaleString()}
             </div>
           </div>
 
