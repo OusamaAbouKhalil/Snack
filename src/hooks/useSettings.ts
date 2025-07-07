@@ -39,9 +39,9 @@ export function useSettings() {
 
       // Parse numeric values
       const parsedSettings: Settings = {
-        tax_rate: parseFloat(settingsObj.tax_rate || '8.0'),
-        currency: settingsObj.currency || 'USD',
-        store_name: settingsObj.store_name || 'Crêpe Café',
+        tax_rate: parseFloat(settingsObj.tax_rate || '11.0'),
+        currency: settingsObj.currency || 'LBP',
+        store_name: settingsObj.store_name || 'CraveBites',
         store_address: settingsObj.store_address || '',
         store_phone: settingsObj.store_phone || '',
         loyalty_points_rate: parseFloat(settingsObj.loyalty_points_rate || '1.0'),

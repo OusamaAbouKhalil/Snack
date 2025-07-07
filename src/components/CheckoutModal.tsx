@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, CreditCard, DollarSign, User, Check, Printer } from 'lucide-react';
 import { CartItem } from '../types';
+import { useSettings } from '../hooks/useSettings';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -21,10 +22,20 @@ export function CheckoutModal({
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [showSuccess, setShowSuccess] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
+  const { settings } = useSettings();
 
   const total = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const tax = total * 0.08; // 8% tax rate
+  const taxRate = (settings?.tax_rate || 8) / 100;
+  const tax = total * taxRate;
   const finalTotal = total + tax;
+
+  const formatCurrency = (amount: number) => {
+    const currency = settings?.currency || 'USD';
+    if (currency === 'LBP') {
+      return `${amount.toLocaleString()} ل.ل`;
+    }
+    return `$${amount.toFixed(2)}`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,71 +60,154 @@ export function CheckoutModal({
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
+    const storeName = settings?.store_name || 'CraveBites';
+    const storeAddress = settings?.store_address || '';
+    const storePhone = settings?.store_phone || '';
+    const currency = settings?.currency || 'USD';
+
+    const formatPrintCurrency = (amount: number) => {
+      if (currency === 'LBP') {
+        return `${Math.round(amount).toLocaleString()} ل.ل`;
+      }
+      return `$${amount.toFixed(2)}`;
+    };
+
     const invoiceHTML = `
       <!DOCTYPE html>
       <html>
         <head>
           <title>Invoice - ${orderNumber}</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { text-align: center; border-bottom: 2px solid #f97316; padding-bottom: 20px; margin-bottom: 20px; }
-            .logo { color: #f97316; font-size: 24px; font-weight: bold; }
-            .order-info { margin-bottom: 20px; }
-            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            .items-table th { background-color: #f97316; color: white; }
-            .total-section { text-align: right; }
-            .total-line { margin: 5px 0; }
-            .final-total { font-weight: bold; font-size: 18px; border-top: 2px solid #f97316; padding-top: 10px; }
-            .footer { text-align: center; margin-top: 30px; color: #666; }
+            @media print {
+              @page { margin: 0; size: 80mm auto; }
+              body { margin: 0; }
+            }
+            body { 
+              font-family: 'Courier New', monospace; 
+              font-size: 12px;
+              line-height: 1.3;
+              margin: 0;
+              padding: 8px;
+              width: 72mm;
+              background: white;
+            }
+            .header { 
+              text-align: center; 
+              border-bottom: 1px dashed #000; 
+              padding-bottom: 8px; 
+              margin-bottom: 8px; 
+            }
+            .logo { 
+              font-weight: bold; 
+              font-size: 16px; 
+              margin-bottom: 2px;
+            }
+            .store-info {
+              font-size: 10px;
+              margin-bottom: 2px;
+            }
+            .order-info { 
+              margin-bottom: 8px; 
+              font-size: 11px;
+            }
+            .items-table { 
+              width: 100%; 
+              margin-bottom: 8px; 
+              font-size: 11px;
+            }
+            .item-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 2px;
+            }
+            .item-name {
+              flex: 1;
+              padding-right: 4px;
+            }
+            .item-qty {
+              width: 20px;
+              text-align: center;
+            }
+            .item-price {
+              width: 60px;
+              text-align: right;
+            }
+            .separator {
+              border-top: 1px dashed #000;
+              margin: 8px 0;
+            }
+            .total-section { 
+              font-size: 11px;
+            }
+            .total-line { 
+              display: flex;
+              justify-content: space-between;
+              margin: 2px 0; 
+            }
+            .final-total { 
+              font-weight: bold; 
+              font-size: 13px; 
+              border-top: 1px dashed #000; 
+              padding-top: 4px;
+              margin-top: 4px;
+            }
+            .footer { 
+              text-align: center; 
+              margin-top: 12px; 
+              font-size: 10px;
+              border-top: 1px dashed #000;
+              padding-top: 8px;
+            }
           </style>
         </head>
         <body>
           <div class="header">
-            <div class="logo">🥞 Crêpe Café</div>
-            <p>Delicious Crepes & More</p>
-            <p>123 Main Street, City, State 12345 | (555) 123-4567</p>
+            <div class="logo">${storeName}</div>
+            ${storeAddress ? `<div class="store-info">${storeAddress}</div>` : ''}
+            ${storePhone ? `<div class="store-info">${storePhone}</div>` : ''}
           </div>
           
           <div class="order-info">
-            <h3>Order Invoice</h3>
-            <p><strong>Order Number:</strong> ${orderNumber}</p>
-            <p><strong>Customer:</strong> ${customerName}</p>
-            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-            <p><strong>Time:</strong> ${new Date().toLocaleTimeString()}</p>
-            <p><strong>Payment Method:</strong> ${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}</p>
+            <div><strong>Order:</strong> ${orderNumber}</div>
+            <div><strong>Customer:</strong> ${customerName}</div>
+            <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
+            <div><strong>Time:</strong> ${new Date().toLocaleTimeString()}</div>
+            <div><strong>Payment:</strong> ${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}</div>
           </div>
 
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${cartItems.map(item => `
-                <tr>
-                  <td>${item.product.name}</td>
-                  <td>${item.quantity}</td>
-                  <td>$${item.product.price.toFixed(2)}</td>
-                  <td>$${(item.product.price * item.quantity).toFixed(2)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+          <div class="separator"></div>
+
+          <div class="items-table">
+            ${cartItems.map(item => `
+              <div class="item-row">
+                <div class="item-name">${item.product.name}</div>
+                <div class="item-qty">${item.quantity}</div>
+                <div class="item-price">${formatPrintCurrency(item.product.price * item.quantity)}</div>
+              </div>
+              <div style="font-size: 10px; color: #666; margin-bottom: 4px;">
+                ${formatPrintCurrency(item.product.price)} x ${item.quantity}
+              </div>
+            `).join('')}
+          </div>
 
           <div class="total-section">
-            <div class="total-line">Subtotal: $${total.toFixed(2)}</div>
-            <div class="total-line">Tax (8%): $${tax.toFixed(2)}</div>
-            <div class="final-total">Total: $${finalTotal.toFixed(2)}</div>
+            <div class="total-line">
+              <span>Subtotal:</span>
+              <span>${formatPrintCurrency(total)}</span>
+            </div>
+            <div class="total-line">
+              <span>Tax (${(taxRate * 100).toFixed(1)}%):</span>
+              <span>${formatPrintCurrency(tax)}</span>
+            </div>
+            <div class="total-line final-total">
+              <span>TOTAL:</span>
+              <span>${formatPrintCurrency(finalTotal)}</span>
+            </div>
           </div>
 
           <div class="footer">
-            <p>Thank you for your business!</p>
-            <p>Visit us again soon!</p>
+            <div>Thank you for your business!</div>
+            <div>Visit us again soon!</div>
           </div>
         </body>
       </html>
@@ -192,7 +286,7 @@ export function CheckoutModal({
                     <span className="text-gray-600 ml-2">×{item.quantity}</span>
                   </div>
                   <div className="font-semibold text-gray-800">
-                    ${(item.product.price * item.quantity).toFixed(2)}
+                    {formatCurrency(item.product.price * item.quantity)}
                   </div>
                 </div>
               ))}
@@ -200,15 +294,15 @@ export function CheckoutModal({
               <div className="border-t border-gray-200 pt-3 space-y-2">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal:</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>{formatCurrency(total)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Tax (8%):</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>Tax ({(taxRate * 100).toFixed(1)}%):</span>
+                  <span>{formatCurrency(tax)}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold text-gray-800 border-t border-gray-200 pt-2">
                   <span>Total:</span>
-                  <span>${finalTotal.toFixed(2)}</span>
+                  <span>{formatCurrency(finalTotal)}</span>
                 </div>
               </div>
             </div>
@@ -285,7 +379,7 @@ export function CheckoutModal({
                     Processing...
                   </div>
                 ) : (
-                  `Complete Order - $${finalTotal.toFixed(2)}`
+                  `Complete Order - ${formatCurrency(finalTotal)}`
                 )}
               </button>
             </div>

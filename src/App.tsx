@@ -51,8 +51,8 @@ function GuestApp() {
                 <Coffee className="text-white" size={24} />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Crêpe Café</h1>
-                <p className="text-sm text-gray-600">Delicious Crepes & More</p>
+                <h1 className="text-2xl font-bold text-gray-900">CraveBites</h1>
+                <p className="text-sm text-gray-600">Delicious Food & More</p>
               </div>
             </div>
           </div>
