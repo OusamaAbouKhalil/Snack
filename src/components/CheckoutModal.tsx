@@ -71,7 +71,7 @@ export function CheckoutModal({
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const storeName = settings?.store_name || 'CraveBites';
+    const storeName = settings?.store_name || 'BeSweet';
     const storeAddress = settings?.store_address || '';
     const storePhone = settings?.store_phone || '';
     const exchangeRate = settings?.usd_to_lbp_rate || 89500;
