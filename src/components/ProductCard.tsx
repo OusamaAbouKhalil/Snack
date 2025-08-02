@@ -15,7 +15,7 @@ export function ProductCard({ product }: ProductCardProps) {
     
     return {
       usd: `$${priceUSD.toFixed(2)}`,
-      lbp: `${Math.round(priceLBP).toLocaleString()}`
+      lbp: `${Math.round(priceLBP).toLocaleString()}L.L`
     };
   };
 
