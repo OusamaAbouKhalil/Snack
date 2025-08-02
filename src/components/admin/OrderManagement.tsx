@@ -456,7 +456,7 @@ export function OrderManagement() {
                       <div key={item.product.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                         <div>
                           <div className="font-medium text-sm">{item.product.name}</div>
-                          <div className="text-xs text-gray-600">{formatCurrency(item.product.price)} each</div>
+                          <div className="text-xs text-gray-600">{item.product.price} each</div>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
