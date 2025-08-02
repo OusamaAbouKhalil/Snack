@@ -348,7 +348,7 @@ export function CheckoutModal({
                 <div className="flex justify-between text-lg font-bold text-gray-800 border-t border-gray-200 pt-2">
                   <span>Total:</span>
                   <div className="text-right">
-                    <div className="text-orange-600">{formatDualCurrency(finalTotal).usd}</div>
+                    <div className="text-primary-600">{formatDualCurrency(finalTotal).usd}</div>
                     <div className="text-sm text-gray-600">{formatDualCurrency(finalTotal).lbp}</div>
                   </div>
                 </div>
@@ -384,7 +384,7 @@ export function CheckoutModal({
                   onClick={() => setPaymentMethod('cash')}
                   className={`p-4 border-2 rounded-xl transition-all ${
                     paymentMethod === 'cash'
-                      ? 'border-orange-500 bg-orange-50 text-orange-700'
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
@@ -397,7 +397,7 @@ export function CheckoutModal({
                   onClick={() => setPaymentMethod('card')}
                   className={`p-4 border-2 rounded-xl transition-all ${
                     paymentMethod === 'card'
-                      ? 'border-orange-500 bg-orange-50 text-orange-700'
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
@@ -419,7 +419,7 @@ export function CheckoutModal({
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-500 text-white rounded-xl hover:from-orange-600 hover:to-yellow-600 transition-all font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-400 text-white rounded-xl hover:from-primary-600 hover:to-primary-500 transition-all font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <div className="flex items-center justify-center">

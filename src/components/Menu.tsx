@@ -57,7 +57,7 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
               onClick={() => onCategorySelect(category.id)}
               className={`px-6 py-3 rounded-full font-medium transition-all duration-200 ${
                 selectedCategory === category.id
-                  ? 'bg-orange-500 text-white shadow-lg transform scale-105'
+                  ? 'bg-primary-500 text-white shadow-lg transform scale-105'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
               }`}
             >

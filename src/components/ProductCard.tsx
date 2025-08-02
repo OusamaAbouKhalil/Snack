@@ -54,7 +54,7 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
         
         <div className="flex items-center justify-between">
-          <div className="text-orange-600">
+          <div className="text-primary-600">
             <div className="text-lg font-bold">
               {prices.usd}
             </div>

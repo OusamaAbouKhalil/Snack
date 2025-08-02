@@ -16,9 +16,9 @@ export function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout }: Cart
     return (
       <div className="bg-white rounded-xl shadow-lg p-6 h-full">
         <div className="flex items-center gap-3 mb-6">
-          <ShoppingCart className="text-orange-500" size={24} />
+          <ShoppingCart className="text-primary-500" size={24} />
           <h2 className="text-xl font-bold text-gray-800">Order Cart</h2>
-        </div>
+          <span className="bg-primary-100 text-primary-600 px-2 py-1 rounded-full text-sm font-medium">
         <div className="flex flex-col items-center justify-center h-64 text-gray-500">
           <ShoppingCart size={64} className="mb-4 opacity-30" />
           <p>Your cart is empty</p>
@@ -82,13 +82,14 @@ export function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout }: Cart
         <div className="flex justify-between items-center mb-4">
           <span className="text-xl font-bold text-gray-800">Total:</span>
           <span className="text-2xl font-bold text-orange-600">
+          <span className="text-2xl font-bold text-primary-600">
             ${total.toFixed(2)}
           </span>
         </div>
         
         <button
           onClick={onCheckout}
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-semibold text-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+          className="w-full bg-primary-500 hover:bg-primary-600 text-white py-4 rounded-xl font-semibold text-lg transition-colors duration-200 shadow-md hover:shadow-lg"
         >
           Proceed to Checkout
         </button>

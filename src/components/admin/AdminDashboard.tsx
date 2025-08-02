@@ -87,7 +87,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     onClick={() => setActiveView(item.id as AdminView)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                       activeView === item.id
-                        ? 'bg-orange-100 text-orange-700 font-medium'
+                        ? 'bg-primary-100 text-primary-700 font-medium'
                         : 'text-gray-600 hover:bg-gray-100'
                     }`}
                   >

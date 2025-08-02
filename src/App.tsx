@@ -41,18 +41,23 @@ function GuestApp() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-amber-50">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-primary-100 to-primary-200">
       {/* Simple Header */}
-      <header className="bg-white shadow-sm border-b border-orange-100">
+      <header className="bg-white shadow-sm border-b border-primary-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center h-16">
             <div className="flex items-center gap-3">
-              <div className="bg-orange-500 p-2 rounded-xl">
-                <Coffee className="text-white" size={24} />
+              <div className="w-12 h-12 rounded-xl overflow-hidden bg-white p-1">
+                <img
+                  src="/WhatsApp Image 2025-08-02 at 3.02.24 PM.jpeg"
+                  alt="CraveBites Logo"
+                  className="w-full h-full object-contain"
+                  style={{ filter: 'brightness(0) saturate(100%) invert(20%) sepia(45%) saturate(1500%) hue-rotate(25deg) brightness(95%) contrast(95%)' }}
+                />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">CraveBites</h1>
-                <p className="text-sm text-gray-600">Delicious Food & More</p>
+                <h1 className="text-2xl font-bold text-brown-900">CraveBites</h1>
+                <p className="text-sm text-brown-700">Delicious Food & More</p>
               </div>
             </div>
           </div>
@@ -78,9 +83,9 @@ function AdminApp() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-200 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-500 mx-auto mb-4"></div>
           <p className="text-gray-600 text-lg">Loading...</p>
         </div>
       </div>
@@ -90,16 +95,16 @@ function AdminApp() {
   if (!user) {
     return (
       <>
-        <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-200 flex items-center justify-center">
           <div className="text-center bg-white p-8 rounded-xl shadow-lg">
-            <div className="bg-orange-100 p-4 rounded-full w-20 h-20 mx-auto mb-4">
-              <Coffee className="text-orange-600 w-12 h-12" />
+            <div className="bg-primary-100 p-4 rounded-full w-20 h-20 mx-auto mb-4">
+              <Coffee className="text-primary-600 w-12 h-12" />
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Admin Access Required</h2>
             <p className="text-gray-600 mb-4">Please sign in to access the admin panel</p>
             <button 
               onClick={() => setShowLogin(true)}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
+              className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded-lg transition-colors"
             >
               Sign In
             </button>
