@@ -481,7 +481,7 @@ export function OrderManagement() {
                   <div className="border-t border-gray-200 pt-4">
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-lg font-semibold text-gray-900">Total:</span>
-                      <span className="text-xl font-bold text-orange-600">{total}</span>
+                      <span className="text-xl font-bold text-orange-600">{total} $</span>
                     </div>
                     
                     <button
