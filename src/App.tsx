@@ -52,7 +52,6 @@ function GuestApp() {
                   src="/WhatsApp Image 2025-08-02 at 3.02.24 PM.jpeg"
                   alt="CraveBites Logo"
                   className="w-full h-full object-contain"
-                  style={{ filter: 'brightness(0) saturate(100%) invert(20%) sepia(45%) saturate(1500%) hue-rotate(25deg) brightness(95%) contrast(95%)' }}
                 />
               </div>
               <div>
