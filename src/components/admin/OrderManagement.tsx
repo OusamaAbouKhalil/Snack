@@ -27,7 +27,7 @@ export function OrderManagement() {
   const formatCurrency = (amount: number) => {
     const currency = settings?.currency || 'USD';
     if (currency === 'LBP') {
-      return `${Math.round(amount).toLocaleString()} ل.ل`;
+      return `${Math.round(amount)} ل.ل`;
     }
     return `$${amount}`;
   };
