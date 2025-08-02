@@ -29,7 +29,7 @@ export function OrderManagement() {
     if (currency === 'LBP') {
       return `${Math.round(amount).toLocaleString()} ل.ل`;
     }
-    return `$${amount.toFixed(2)}`;
+    return `$${amount}`;
   };
 
   const addToCart = (productId: string) => {
