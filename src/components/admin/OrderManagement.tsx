@@ -404,7 +404,7 @@ export function OrderManagement() {
                       <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
                           <div className="font-medium text-gray-900">{product.name}</div>
-                          <div className="text-sm text-gray-600">{formatCurrency(product.price)}</div>
+                          <div className="text-sm text-gray-600">{product.price}</div>
                         </div>
                         <button
                           onClick={() => addToCart(product.id)}
