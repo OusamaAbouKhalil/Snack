@@ -8,7 +8,7 @@ export function SettingsPanel() {
   const [formData, setFormData] = useState({
     tax_rate: settings?.tax_rate?.toString() || '11',
     currency: settings?.currency || 'LBP',
-    store_name: settings?.store_name || 'CraveBites',
+    store_name: settings?.store_name || 'BeSweet',
     store_address: settings?.store_address || '',
     store_phone: settings?.store_phone || '',
     loyalty_points_rate: settings?.loyalty_points_rate?.toString() || '1',
