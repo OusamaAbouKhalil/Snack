@@ -142,7 +142,7 @@ export function OrderHistory() {
                     <div className="text-gray-900">{order.customer_name || 'Walk-in Customer'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-semibold text-gray-900">${order.total_amount.toFixed(2)}</div>
+                    <div className="font-semibold text-gray-900">${order.total_amount}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-gray-900 capitalize">{order.payment_method}</div>
