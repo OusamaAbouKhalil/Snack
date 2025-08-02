@@ -87,7 +87,7 @@ export function OrderManagement() {
     const tax = total * taxRate;
     const finalTotal = total + tax;
     const orderNumber = `ORD-${Date.now()}`;
-    const storeName = settings?.store_name || 'CraveBites';
+    const storeName = settings?.store_name || 'BeSweet';
     const storeAddress = settings?.store_address || '';
     const storePhone = settings?.store_phone || '';
     const currency = settings?.currency || 'USD';
