@@ -1,18 +1,3 @@
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Ensure smooth scrolling for the entire page */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Hide scrollbar for category navigation */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

@@ -1,7 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Product, Category } from '../types';
+import React, { useState, useEffect } from 'react';
 import { ProductCard } from './ProductCard';
+import { Product, Category } from '../types';
 
 interface MenuProps {
   products: Product[];
@@ -11,151 +10,82 @@ interface MenuProps {
 }
 
 export function Menu({ products, categories, selectedCategory, onCategorySelect }: MenuProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [showLeftArrow, setShowLeftArrow] = useState(false);
-  const [showRightArrow, setShowRightArrow] = useState(false);
-
-  const getCategoryIcon = (categoryName: string) => {
-    const name = categoryName.toLowerCase();
-    if (name.includes('waffle')) return '🍽️';
-    if (name.includes('pancake')) return '🍽️';
-    if (name.includes('sweet') || name.includes('crepe')) return '🧁';
-    if (name.includes('drink') || name.includes('beverage')) return '🥤';
-    if (name.includes('add-on') || name.includes('addon')) return '🍽️';
-    return '🍽️';
-  };
-
-  const checkScrollButtons = () => {
-    if (scrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      setShowLeftArrow(scrollLeft > 0);
-      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1);
-    }
-  };
-
-  const scrollLeft = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: -200, behavior: 'smooth' });
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 200, behavior: 'smooth' });
-    }
-  };
+  const [isSticky, setIsSticky] = useState(false);
 
   useEffect(() => {
-    checkScrollButtons();
-    const handleResize = () => checkScrollButtons();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [categories]);
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsSticky(scrollTop > 200);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const filteredProducts = selectedCategory === 'all' 
-    ? products.filter(p => p.is_available)
-    : products.filter(p => p.is_available && p.category_id === selectedCategory);
-
-  const allCategories = [
-    { id: 'all', name: 'All Items', display_order: -1, created_at: '' },
-    ...categories
-  ];
+    ? products 
+    : products.filter(product => product.category_id === selectedCategory);
 
   return (
-    <div className="min-h-screen">
-      {/* Sticky Category Navigation */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-        <div className="relative">
-          {/* Left Arrow */}
-          {showLeftArrow && (
-            <button
-              onClick={scrollLeft}
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-50 transition-colors"
-            >
-              <ChevronLeft size={20} className="text-gray-600" />
-            </button>
-          )}
+    <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="mb-6">
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">Our Menu</h2>
+        <p className="text-gray-600 mb-6">Discover our delicious selection of food and treats</p>
+      </div>
 
-          {/* Categories Container */}
-          <div
-            ref={scrollRef}
-            onScroll={checkScrollButtons}
-            className="flex gap-4 px-6 py-4 overflow-x-auto scrollbar-hide scroll-smooth"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      {/* Categories - Sticky when scrolling */}
+      <div className={`transition-all duration-300 ${
+        isSticky 
+          ? 'fixed top-0 left-0 right-0 z-50 bg-white shadow-lg p-4' 
+          : 'relative mb-6'
+      }`}>
+        <div className={`${isSticky ? 'max-w-7xl mx-auto' : ''} flex flex-wrap gap-2`}>
+          <button
+            onClick={() => onCategorySelect('all')}
+            className={`px-6 py-3 rounded-full font-medium transition-all duration-200 ${
+              selectedCategory === 'all'
+                ? 'bg-orange-500 text-white shadow-lg transform scale-105'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
+            }`}
           >
-            {allCategories
-              .sort((a, b) => a.display_order - b.display_order)
-              .map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => onCategorySelect(category.id)}
-                  className="flex-shrink-0 flex flex-col items-center gap-2 group"
-                >
-                  <div
-                    className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl transition-all duration-200 ${
-                      selectedCategory === category.id
-                        ? 'bg-primary-400 shadow-lg scale-110 ring-2 ring-primary-300'
-                        : 'bg-gray-100 hover:bg-gray-200 group-hover:scale-105'
-                    }`}
-                  >
-                    {getCategoryIcon(category.name)}
-                  </div>
-                  <span
-                    className={`text-sm font-medium text-center min-w-0 max-w-[80px] leading-tight transition-colors ${
-                      selectedCategory === category.id
-                        ? 'text-primary-700'
-                        : 'text-gray-600 group-hover:text-gray-800'
-                    }`}
-                  >
-                    {category.name}
-                  </span>
-                </button>
-              ))}
-          </div>
-
-          {/* Right Arrow */}
-          {showRightArrow && (
+            All Items
+          </button>
+          
+          {categories.map((category) => (
             <button
-              onClick={scrollRight}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-50 transition-colors"
+              key={category.id}
+              onClick={() => onCategorySelect(category.id)}
+              className={`px-6 py-3 rounded-full font-medium transition-all duration-200 ${
+                selectedCategory === category.id
+                  ? 'bg-primary-500 text-white shadow-lg transform scale-105'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
+              }`}
             >
-              <ChevronRight size={20} className="text-gray-600" />
+              {category.name}
             </button>
-          )}
+          ))}
         </div>
       </div>
 
-      {/* Menu Items */}
-      <div className="px-4 py-6">
-        {/* Category Title */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-brown-900 mb-2">
-            {allCategories.find(c => c.id === selectedCategory)?.name || 'All Items'}
-          </h2>
-          <p className="text-gray-600">
-            {filteredProducts.length} item{filteredProducts.length !== 1 ? 's' : ''} available
-          </p>
-        </div>
+      {/* Add spacing when categories are sticky */}
+      {isSticky && <div className="h-20 mb-6"></div>}
 
-        {/* Products Grid */}
-        {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🍽️</div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">No items available</h3>
-            <p className="text-gray-600">
-              {selectedCategory === 'all' 
-                ? 'No products are currently available.' 
-                : 'No items in this category are currently available.'}
-            </p>
-          </div>
-        )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {filteredProducts.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+          />
+        ))}
       </div>
+
+      {filteredProducts.length === 0 && (
+        <div className="text-center py-12 text-gray-500">
+          <div className="text-6xl mb-4">🍽️</div>
+          <p className="text-lg font-medium">No products found in this category</p>
+          <p className="text-sm">Try selecting a different category</p>
+        </div>
+      )}
     </div>
   );
 }
