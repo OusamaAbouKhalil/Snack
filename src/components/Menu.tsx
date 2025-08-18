@@ -17,13 +17,11 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
 
   const getCategoryIcon = (categoryName: string) => {
     const name = categoryName.toLowerCase();
-    if (name.includes('cold') || name.includes('appetizer')) return '🥗';
-    if (name.includes('hot') || name.includes('appetizer')) return '🍤';
-    if (name.includes('salad')) return '🥬';
-    if (name.includes('mashawi') || name.includes('grill')) return '🍖';
-    if (name.includes('chicken')) return '🍗';
-    if (name.includes('sweet') || name.includes('dessert')) return '🧁';
+    if (name.includes('waffle')) return '🍽️';
+    if (name.includes('pancake')) return '🍽️';
+    if (name.includes('sweet') || name.includes('crepe')) return '🧁';
     if (name.includes('drink') || name.includes('beverage')) return '🥤';
+    if (name.includes('add-on') || name.includes('addon')) return '🍽️';
     return '🍽️';
   };
 
