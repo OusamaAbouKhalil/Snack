@@ -43,8 +43,6 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* Rating Badge */}
         <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300">
           <div className="flex items-center gap-1">
-            <Star className="text-yellow-400 fill-current" size={12} />
-            <span className="text-xs font-semibold text-gray-700">4.8</span>
           </div>
         </div>
         
@@ -94,7 +92,6 @@ export function ProductCard({ product }: ProductCardProps) {
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
               Fresh & Hot
             </span>
-            <span>~15 min</span>
           </div>
         </div>
       </div>
