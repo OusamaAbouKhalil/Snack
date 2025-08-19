@@ -49,7 +49,7 @@ function GuestApp() {
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl overflow-hidden bg-white p-1">
                 <img
-                  src="/WhatsApp Image 2025-08-02 at 3.02.24 PM.jpeg"
+                  src="/logo.png"
                   alt="BeSweet Logo"
                   className="w-full h-full object-contain"
                 />
