@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { ProductCard } from './ProductCard';
 import { Product, Category } from '../types';
 
@@ -67,7 +69,69 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
     return '🍽️';
   };
 
+  const [isSticky, setIsSticky] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsSticky(scrollTop > 200);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    checkScrollButtons();
+  }, [categories]);
+
+  const checkScrollButtons = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+    }
+  };
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 200;
+      const newScrollLeft = direction === 'left' 
+        ? scrollContainerRef.current.scrollLeft - scrollAmount
+        : scrollContainerRef.current.scrollLeft + scrollAmount;
+      
+      scrollContainerRef.current.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const getCategoryIcon = (categoryName: string) => {
+    const name = categoryName.toLowerCase();
+    if (name.includes('waffle')) return '🧇';
+    if (name.includes('pancake')) return '🥞';
+    if (name.includes('crepe') || name.includes('sweet')) return '🧁';
+    if (name.includes('beverage') || name.includes('drink')) return '🥤';
+    if (name.includes('add-on') || name.includes('addon')) return '🍯';
+    if (name.includes('appetizer') || name.includes('cold')) return '🥗';
+    if (name.includes('hot')) return '🍤';
+    if (name.includes('salad')) return '🥬';
+    if (name.includes('mashawi') || name.includes('grill')) return '🍖';
+    if (name.includes('chicken')) return '🍗';
+    return '🍽️';
+  };
+
   const filteredProducts = selectedCategory === 'all' 
+    ? products.filter(p => p.is_available)
+    : products.filter(product => product.category_id === selectedCategory && product.is_available);
+
+  const selectedCategoryName = selectedCategory === 'all' 
+    ? 'All Items' 
+    : categories.find(cat => cat.id === selectedCategory)?.name || 'Unknown';
     ? products.filter(p => p.is_available)
     : products.filter(product => product.category_id === selectedCategory && product.is_available);
 
