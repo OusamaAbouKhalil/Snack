@@ -3,12 +3,14 @@ import { Plus, Search, ShoppingCart, User, CreditCard, Clock, Check, X, Printer 
 import { useOrderHistory } from '../../hooks/useOrderHistory';
 import { useProducts } from '../../hooks/useProducts';
 import { useOrders } from '../../hooks/useOrders';
+import { useSettings } from '../../hooks/useSettings';
 import { CartItem } from '../../types';
 
 export function OrderManagement() {
   const { orders, loading, updateOrderStatus, refetch } = useOrderHistory();
   const { products } = useProducts();
   const { createOrder, loading: orderLoading } = useOrders();
+  const { settings } = useSettings();
   
   const [showCreateOrder, setShowCreateOrder] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -21,6 +23,14 @@ export function OrderManagement() {
     order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.customer_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const formatCurrency = (amount: number) => {
+    const currency = settings?.currency || 'USD';
+    if (currency === 'LBP') {
+      return `${Math.round(amount)} ل.ل`;
+    }
+    return `$${amount}`;
+  };
 
   const addToCart = (productId: string) => {
     const product = products.find(p => p.id === productId);
@@ -73,9 +83,21 @@ export function OrderManagement() {
 
   const printInvoice = (orderId: string, items: CartItem[], customer: string, payment: string) => {
     const total = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-    const tax = total * 0.11;
+    const taxRate = (settings?.tax_rate || 8) / 100;
+    const tax = total * taxRate;
     const finalTotal = total + tax;
     const orderNumber = `ORD-${Date.now()}`;
+    const storeName = settings?.store_name || 'BeSweet';
+    const storeAddress = settings?.store_address || '';
+    const storePhone = settings?.store_phone || '';
+    const currency = settings?.currency || 'USD';
+
+    const formatPrintCurrency = (amount: number) => {
+      if (currency === 'LBP') {
+        return `${Math.round(amount).toLocaleString()} ل.ل`;
+      }
+      return `$${amount.toFixed(2)}`;
+    };
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -86,65 +108,136 @@ export function OrderManagement() {
         <head>
           <title>Invoice - ${orderNumber}</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { text-align: center; border-bottom: 2px solid #f97316; padding-bottom: 20px; margin-bottom: 20px; }
-            .logo { color: #f97316; font-size: 24px; font-weight: bold; }
-            .order-info { margin-bottom: 20px; }
-            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            .items-table th { background-color: #f97316; color: white; }
-            .total-section { text-align: right; }
-            .total-line { margin: 5px 0; }
-            .final-total { font-weight: bold; font-size: 18px; border-top: 2px solid #f97316; padding-top: 10px; }
-            .footer { text-align: center; margin-top: 30px; color: #666; }
+            @media print {
+              @page { margin: 0; size: 80mm auto; }
+              body { margin: 0; }
+            }
+            body { 
+              font-family: 'Courier New', monospace; 
+              font-size: 12px;
+              line-height: 1.3;
+              margin: 0;
+              padding: 8px;
+              width: 72mm;
+              background: white;
+            }
+            .header { 
+              text-align: center; 
+              border-bottom: 1px dashed #000; 
+              padding-bottom: 8px; 
+              margin-bottom: 8px; 
+            }
+            .logo { 
+              font-weight: bold; 
+              font-size: 16px; 
+              margin-bottom: 2px;
+            }
+            .store-info {
+              font-size: 10px;
+              margin-bottom: 2px;
+            }
+            .order-info { 
+              margin-bottom: 8px; 
+              font-size: 11px;
+            }
+            .items-table { 
+              width: 100%; 
+              margin-bottom: 8px; 
+              font-size: 11px;
+            }
+            .item-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 2px;
+            }
+            .item-name {
+              flex: 1;
+              padding-right: 4px;
+            }
+            .item-qty {
+              width: 20px;
+              text-align: center;
+            }
+            .item-price {
+              width: 60px;
+              text-align: right;
+            }
+            .separator {
+              border-top: 1px dashed #000;
+              margin: 8px 0;
+            }
+            .total-section { 
+              font-size: 11px;
+            }
+            .total-line { 
+              display: flex;
+              justify-content: space-between;
+              margin: 2px 0; 
+            }
+            .final-total { 
+              font-weight: bold; 
+              font-size: 13px; 
+              border-top: 1px dashed #000; 
+              padding-top: 4px;
+              margin-top: 4px;
+            }
+            .footer { 
+              text-align: center; 
+              margin-top: 12px; 
+              font-size: 10px;
+              border-top: 1px dashed #000;
+              padding-top: 8px;
+            }
           </style>
         </head>
         <body>
           <div class="header">
-            <div class="logo">🥞 Crêpe Café</div>
-            <p>Delicious Crepes & More</p>
-            <p>123 Main Street, City, State 12345 | (555) 123-4567</p>
+            <div class="logo">${storeName}</div>
+            ${storeAddress ? `<div class="store-info">${storeAddress}</div>` : ''}
+            ${storePhone ? `<div class="store-info">${storePhone}</div>` : ''}
           </div>
           
           <div class="order-info">
-            <h3>Order Invoice</h3>
-            <p><strong>Order Number:</strong> ${orderNumber}</p>
-            <p><strong>Customer:</strong> ${customer}</p>
-            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-            <p><strong>Time:</strong> ${new Date().toLocaleTimeString()}</p>
-            <p><strong>Payment Method:</strong> ${payment.charAt(0).toUpperCase() + payment.slice(1)}</p>
+            <div><strong>Order:</strong> ${orderNumber}</div>
+            <div><strong>Customer:</strong> ${customer}</div>
+            <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
+            <div><strong>Time:</strong> ${new Date().toLocaleTimeString()}</div>
+            <div><strong>Payment:</strong> ${payment.charAt(0).toUpperCase() + payment.slice(1)}</div>
           </div>
 
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items.map(item => `
-                <tr>
-                  <td>${item.product.name}</td>
-                  <td>${item.quantity}</td>
-                  <td>$${item.product.price.toFixed(2)}</td>
-                  <td>$${(item.product.price * item.quantity).toFixed(2)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+          <div class="separator"></div>
+
+          <div class="items-table">
+            ${items.map(item => `
+              <div class="item-row">
+                <div class="item-name">${item.product.name}</div>
+                <div class="item-qty">${item.quantity}</div>
+                <div class="item-price">${formatPrintCurrency(item.product.price * item.quantity)}</div>
+              </div>
+              <div style="font-size: 10px; color: #666; margin-bottom: 4px;">
+                ${formatPrintCurrency(item.product.price)} x ${item.quantity}
+              </div>
+            `).join('')}
+          </div>
 
           <div class="total-section">
-            <div class="total-line">Subtotal: $${total.toFixed(2)}</div>
-            <div class="total-line">Tax (11%): $${tax.toFixed(2)}</div>
-            <div class="final-total">Total: $${finalTotal.toFixed(2)}</div>
+            <div class="total-line">
+              <span>Subtotal:</span>
+              <span>${formatPrintCurrency(total)}</span>
+            </div>
+            <div class="total-line">
+              <span>Tax (${(taxRate * 100).toFixed(1)}%):</span>
+              <span>${formatPrintCurrency(tax)}</span>
+            </div>
+            <div class="total-line final-total">
+              <span>TOTAL:</span>
+              <span>${formatPrintCurrency(finalTotal)}</span>
+            </div>
           </div>
 
           <div class="footer">
-            <p>Thank you for your business!</p>
-            <p>Visit us again soon!</p>
+            <div>Thank you for your business!</div>
+            <div>Visit us again soon!</div>
           </div>
         </body>
       </html>
@@ -239,7 +332,7 @@ export function OrderManagement() {
                     <div className="text-gray-900">{order.customer_name || 'Walk-in Customer'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-semibold text-gray-900">${order.total_amount.toFixed(2)}</div>
+                    <div className="font-semibold text-gray-900">{order.total_amount} $</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <select
@@ -311,7 +404,7 @@ export function OrderManagement() {
                       <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
                           <div className="font-medium text-gray-900">{product.name}</div>
-                          <div className="text-sm text-gray-600">${product.price.toFixed(2)}</div>
+                          <div className="text-sm text-gray-600">{product.price}</div>
                         </div>
                         <button
                           onClick={() => addToCart(product.id)}
@@ -363,7 +456,7 @@ export function OrderManagement() {
                       <div key={item.product.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                         <div>
                           <div className="font-medium text-sm">{item.product.name}</div>
-                          <div className="text-xs text-gray-600">${item.product.price.toFixed(2)} each</div>
+                          <div className="text-xs text-gray-600">{item.product.price} each</div>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
@@ -388,7 +481,7 @@ export function OrderManagement() {
                   <div className="border-t border-gray-200 pt-4">
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-lg font-semibold text-gray-900">Total:</span>
-                      <span className="text-xl font-bold text-orange-600">${total.toFixed(2)}</span>
+                      <span className="text-xl font-bold text-orange-600">{total.toFixed(2)} $</span>
                     </div>
                     
                     <button

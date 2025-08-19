@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
-import { Save, Percent, DollarSign, Store, Bell, AlertCircle } from 'lucide-react';
+import { Save, Percent, DollarSign, Store, Bell, AlertCircle, TrendingUp } from 'lucide-react';
 import { useSettings } from '../../hooks/useSettings';
 
 export function SettingsPanel() {
   const { settings, loading, error, updateSettings } = useSettings();
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    tax_rate: settings?.tax_rate?.toString() || '8',
-    currency: settings?.currency || 'USD',
-    store_name: settings?.store_name || 'Crêpe Café',
+    tax_rate: settings?.tax_rate?.toString() || '11',
+    currency: settings?.currency || 'LBP',
+    store_name: settings?.store_name || 'BeSweet',
     store_address: settings?.store_address || '',
     store_phone: settings?.store_phone || '',
     loyalty_points_rate: settings?.loyalty_points_rate?.toString() || '1',
-    low_stock_threshold: settings?.low_stock_threshold?.toString() || '10'
+    low_stock_threshold: settings?.low_stock_threshold?.toString() || '10',
+    usd_to_lbp_rate: settings?.usd_to_lbp_rate?.toString() || '89500'
   });
 
   // Update form data when settings load
@@ -25,7 +26,8 @@ export function SettingsPanel() {
         store_address: settings.store_address,
         store_phone: settings.store_phone,
         loyalty_points_rate: settings.loyalty_points_rate.toString(),
-        low_stock_threshold: settings.low_stock_threshold.toString()
+        low_stock_threshold: settings.low_stock_threshold.toString(),
+        usd_to_lbp_rate: settings.usd_to_lbp_rate.toString()
       });
     }
   }, [settings]);
@@ -41,7 +43,8 @@ export function SettingsPanel() {
       store_address: formData.store_address,
       store_phone: formData.store_phone,
       loyalty_points_rate: parseFloat(formData.loyalty_points_rate),
-      low_stock_threshold: parseInt(formData.low_stock_threshold)
+      low_stock_threshold: parseInt(formData.low_stock_threshold),
+      usd_to_lbp_rate: parseFloat(formData.usd_to_lbp_rate)
     };
 
     const success = await updateSettings(settingsData);
@@ -137,7 +140,7 @@ export function SettingsPanel() {
             <h2 className="text-lg font-semibold text-gray-900">Financial Settings</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Tax Rate (%)
@@ -159,7 +162,7 @@ export function SettingsPanel() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Currency
+                Primary Currency
               </label>
               <select
                 value={formData.currency}
@@ -172,6 +175,24 @@ export function SettingsPanel() {
                 <option value="CAD">CAD (C$)</option>
                 <option value="LBP">LBP (ل.ل)</option>
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                USD to LBP Rate
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.usd_to_lbp_rate}
+                  onChange={(e) => setFormData({ ...formData, usd_to_lbp_rate: e.target.value })}
+                  className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  required
+                />
+                <TrendingUp className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Exchange rate for dual currency display</p>
             </div>
 
             <div>

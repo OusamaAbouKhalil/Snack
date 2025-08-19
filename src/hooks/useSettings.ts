@@ -9,6 +9,7 @@ interface Settings {
   store_phone: string;
   loyalty_points_rate: number;
   low_stock_threshold: number;
+  usd_to_lbp_rate: number;
 }
 
 export function useSettings() {
@@ -39,13 +40,14 @@ export function useSettings() {
 
       // Parse numeric values
       const parsedSettings: Settings = {
-        tax_rate: parseFloat(settingsObj.tax_rate || '8.0'),
-        currency: settingsObj.currency || 'USD',
-        store_name: settingsObj.store_name || 'Crêpe Café',
+        tax_rate: parseFloat(settingsObj.tax_rate || '11.0'),
+        currency: settingsObj.currency || 'LBP',
+        store_name: settingsObj.store_name || 'BeSweet',
         store_address: settingsObj.store_address || '',
         store_phone: settingsObj.store_phone || '',
         loyalty_points_rate: parseFloat(settingsObj.loyalty_points_rate || '1.0'),
-        low_stock_threshold: parseInt(settingsObj.low_stock_threshold || '10')
+        low_stock_threshold: parseInt(settingsObj.low_stock_threshold || '10'),
+        usd_to_lbp_rate: parseFloat(settingsObj.usd_to_lbp_rate || '89500')
       };
 
       setSettings(parsedSettings);
