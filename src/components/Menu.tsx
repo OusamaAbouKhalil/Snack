@@ -59,9 +59,26 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
     return '🍽️';
   };
 
+  // Filter available products
+  const availableProducts = products.filter(p => p.is_available);
+
+  // Group products by category for "All Items"
+  const groupedProducts = availableProducts.reduce((acc, product) => {
+    const category = categories.find(cat => cat.id === product.category_id);
+    const categoryName = category ? category.name : 'Uncategorized';
+    if (!acc[categoryName]) {
+      acc[categoryName] = { id: product.category_id, products: [] };
+    }
+    acc[categoryName].products.push(product);
+    return acc;
+  }, {} as Record<string, { id: string; products: Product[] }>);
+
+  // Sort categories to maintain consistent order
+  const sortedCategories = Object.entries(groupedProducts).sort(([a], [b]) => a.localeCompare(b));
+
   const filteredProducts =
     selectedCategory === 'all'
-      ? products.filter(p => p.is_available)
+      ? availableProducts
       : products.filter(p => p.category_id === selectedCategory && p.is_available);
 
   const selectedCategoryName =
@@ -98,7 +115,6 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6">
           <div className="relative py-2">
-            {/* Scroll Left */}
             {canScrollLeft && (
               <button
                 onClick={() => scroll('left')}
@@ -108,14 +124,12 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
               </button>
             )}
 
-            {/* Categories */}
             <div
               ref={scrollContainerRef}
               onScroll={checkScrollButtons}
               className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-5"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {/* All Items */}
               <button
                 onClick={() => onCategorySelect('all')}
                 className={`flex-shrink-0 flex flex-col items-center gap-2.5 p-2.5 rounded-xl transition-all duration-300 group ${
@@ -136,7 +150,6 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
                 <span className="font-medium text-xs whitespace-nowrap">All Items</span>
               </button>
 
-              {/* Dynamic Categories */}
               {categories.map(cat => (
                 <button
                   key={cat.id}
@@ -161,7 +174,6 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
               ))}
             </div>
 
-            {/* Scroll Right */}
             {canScrollRight && (
               <button
                 onClick={() => scroll('right')}
@@ -189,13 +201,46 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
         </div>
 
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {filteredProducts.map((product, i) => (
-              <div key={product.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 100}ms` }}>
-                <ProductCard product={product} />
-              </div>
-            ))}
-          </div>
+          selectedCategory === 'all' ? (
+            <div className="space-y-12">
+              {sortedCategories.map(([categoryName, { id, products }], index) => (
+                <div key={id}>
+                  <div className="mb-6">
+                    <div className="inline-flex items-center gap-3 bg-white rounded-full px-5 py-2.5 shadow-lg border border-primary-100">
+                      <span className="text-xl">{getCategoryIcon(categoryName)}</span>
+                      <h3 className="text-lg font-bold text-gray-800">{categoryName}</h3>
+                      <span className="bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-xs font-semibold">
+                        {products.length} items
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    {products.map((product, i) => (
+                      <div
+                        key={product.id}
+                        className="animate-fade-in-up"
+                        style={{ animationDelay: `${i * 100}ms` }}
+                      >
+                        <ProductCard product={product} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {filteredProducts.map((product, i) => (
+                <div
+                  key={product.id}
+                  className="animate-fade-in-up"
+                  style={{ animationDelay: `${i * 100}ms` }}
+                >
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          )
         ) : (
           <div className="text-center py-16">
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl p-12 max-w-md mx-auto">
