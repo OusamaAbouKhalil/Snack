@@ -74,14 +74,21 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
     return acc;
   }, {} as Record<string, { id: string; products: Product[] }>);
 
-  // Sort categories, placing "Add-ons" last
+  // Sort categories, placing "Add-ons" and "Hookah" last
   const sortedCategories = Object.entries(groupedProducts).sort(([a], [b]) => {
     const isAAddon = a.toLowerCase().includes('add-on') || a.toLowerCase().includes('addon');
     const isBAddon = b.toLowerCase().includes('add-on') || b.toLowerCase().includes('addon');
-    
-    if (isAAddon && !isBAddon) return 1; // Place A (Add-ons) after B
-    if (!isAAddon && isBAddon) return -1; // Place B (Add-ons) after A
-    return a.localeCompare(b); // Alphabetical sort for non-Add-ons
+    const isAHookah = a.toLowerCase().includes('hookah');
+    const isBHookah = b.toLowerCase().includes('hookah');
+
+    // Place Hookah after Add-ons, and both after other categories
+    if (isAHookah && !isBHookah && !isBAddon) return 1; // Hookah after non-Hookah/non-Add-ons
+    if (!isAHookah && !isAAddon && isBHookah) return -1; // Non-Hookah/non-Add-ons before Hookah
+    if (isAAddon && !isBAddon && !isBHookah) return 1; // Add-ons after non-Add-ons/non-Hookah
+    if (!isAAddon && !isAHookah && isBAddon) return -1; // Non-Add-ons/non-Hookah before Add-ons
+    if (isAAddon && isBHookah) return -1; // Add-ons before Hookah
+    if (isAHookah && isBAddon) return 1; // Hookah after Add-ons
+    return a.localeCompare(b); // Alphabetical sort for same type or non-Add-ons/non-Hookah
   });
 
   const filteredProducts =
