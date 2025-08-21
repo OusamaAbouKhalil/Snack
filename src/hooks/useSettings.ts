@@ -47,7 +47,7 @@ export function useSettings() {
         store_phone: settingsObj.store_phone || '',
         loyalty_points_rate: parseFloat(settingsObj.loyalty_points_rate || '1.0'),
         low_stock_threshold: parseInt(settingsObj.low_stock_threshold || '10'),
-        usd_to_lbp_rate: parseFloat(settingsObj.usd_to_lbp_rate || '89500')
+        usd_to_lbp_rate: parseFloat(settingsObj.usd_to_lbp_rate || '90000')
       };
 
       setSettings(parsedSettings);

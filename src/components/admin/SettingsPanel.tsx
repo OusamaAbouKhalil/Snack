@@ -13,7 +13,7 @@ export function SettingsPanel() {
     store_phone: settings?.store_phone || '',
     loyalty_points_rate: settings?.loyalty_points_rate?.toString() || '1',
     low_stock_threshold: settings?.low_stock_threshold?.toString() || '10',
-    usd_to_lbp_rate: settings?.usd_to_lbp_rate?.toString() || '89500'
+    usd_to_lbp_rate: settings?.usd_to_lbp_rate?.toString() || '90000'
   });
 
   // Update form data when settings load

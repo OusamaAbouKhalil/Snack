@@ -29,7 +29,7 @@ export function OrderManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [productSearch, setProductSearch] = useState("");
 
-  const EXCHANGE_RATE = 89500;
+  const EXCHANGE_RATE = 90000;
 
   const pendingOrders = orders.filter((order) => order.status === "pending");
   const filteredOrders = orders.filter(

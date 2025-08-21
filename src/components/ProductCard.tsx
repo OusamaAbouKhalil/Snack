@@ -11,7 +11,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const { settings } = useSettings();
 
   const formatDualCurrency = (priceUSD: number) => {
-    const exchangeRate = settings?.usd_to_lbp_rate || 89500;
+    const exchangeRate = settings?.usd_to_lbp_rate || 90000;
     const priceLBP = priceUSD * exchangeRate;
     
     return {

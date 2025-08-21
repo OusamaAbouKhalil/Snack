@@ -31,7 +31,7 @@ export function CheckoutModal({
   const formatCurrency = (amount: number) => {
     const currency = settings?.currency || 'USD';
     if (currency === 'LBP') {
-      const exchangeRate = settings?.usd_to_lbp_rate || 89500;
+      const exchangeRate = settings?.usd_to_lbp_rate || 90000;
       const lbpAmount = amount * exchangeRate;
       return `${Math.round(lbpAmount).toLocaleString()} LBP`;
     }
@@ -39,7 +39,7 @@ export function CheckoutModal({
   };
 
   const formatDualCurrency = (amountUSD: number) => {
-    const exchangeRate = settings?.usd_to_lbp_rate || 89500;
+    const exchangeRate = settings?.usd_to_lbp_rate || 90000;
     const amountLBP = amountUSD * exchangeRate;
     return {
       usd: `$${amountUSD.toFixed(2)}`,
@@ -73,7 +73,7 @@ export function CheckoutModal({
     const storeName = settings?.store_name || 'BeSweet';
     const storeAddress = settings?.store_address || '';
     const storePhone = settings?.store_phone || '';
-    const exchangeRate = settings?.usd_to_lbp_rate || 89500;
+    const exchangeRate = settings?.usd_to_lbp_rate || 90000;
 
     const invoiceHTML = `
       <!DOCTYPE html>
