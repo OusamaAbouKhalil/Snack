@@ -234,7 +234,7 @@ export function CheckoutModal({
 
           <div class="footer">
             <div>Thank you for your business!</div>
-            <div>Visit us again soon!!</div>
+            <div>Visit us again soon!</div>
           </div>
         </body>
       </html>
