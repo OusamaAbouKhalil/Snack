@@ -54,6 +54,7 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
     if (lower.includes('appetizer') || lower.includes('cold')) return '🥗';
     if (lower.includes('hot')) return '🍤';
     if (lower.includes('salad')) return '🥬';
+    if (lower.includes('hookah')) return '🚬';
     if (lower.includes('mashawi') || lower.includes('grill')) return '🍖';
     if (lower.includes('chicken')) return '🍗';
     return '🍽️';
