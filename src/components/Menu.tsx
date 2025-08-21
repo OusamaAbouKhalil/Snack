@@ -48,7 +48,7 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
     const lower = name.toLowerCase();
     if (lower.includes('waffle')) return '🧇';
     if (lower.includes('pancake')) return '🥞';
-    if (lower.includes('crepe') || lower.includes('sweet')) return '🧁';
+    if (lower.includes('crepe') || lower.includes('sweet')) return '🥞';
     if (lower.includes('beverage') || lower.includes('drink')) return '🥤';
     if (lower.includes('add-on') || lower.includes('addon')) return '🍯';
     if (lower.includes('appetizer') || lower.includes('cold')) return '🥗';
