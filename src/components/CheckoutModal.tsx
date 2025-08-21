@@ -24,17 +24,16 @@ export function CheckoutModal({
   const [orderNumber, setOrderNumber] = useState('');
   const { settings } = useSettings();
 
+  // ✅ Total without tax
   const total = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const taxRate = (settings?.tax_rate || 8) / 100;
-  const tax = total * taxRate;
-  const finalTotal = total + tax;
+  const finalTotal = total;
 
   const formatCurrency = (amount: number) => {
     const currency = settings?.currency || 'USD';
     if (currency === 'LBP') {
       const exchangeRate = settings?.usd_to_lbp_rate || 89500;
       const lbpAmount = amount * exchangeRate;
-      return `${Math.round(lbpAmount).toLocaleString()}`;
+      return `${Math.round(lbpAmount).toLocaleString()} LBP`;
     }
     return `$${amount.toFixed(2)}`;
   };
@@ -44,7 +43,7 @@ export function CheckoutModal({
     const amountLBP = amountUSD * exchangeRate;
     return {
       usd: `$${amountUSD.toFixed(2)}`,
-      lbp: `${Math.round(amountLBP).toLocaleString()}`
+      lbp: `${Math.round(amountLBP).toLocaleString()} LBP`
     };
   };
 
@@ -189,7 +188,7 @@ export function CheckoutModal({
           </div>
 
           <div class="exchange-rate">
-            Exchange Rate: $1 = ${exchangeRate.toLocaleString()}
+            Exchange Rate: $1 = ${exchangeRate.toLocaleString()} LBP
           </div>
 
           <div class="separator"></div>
@@ -207,10 +206,10 @@ export function CheckoutModal({
                     <span>$${itemTotalUSD.toFixed(2)}</span>
                   </div>
                   <div class="item-details">
-                    $${item.product.price.toFixed(2)} (${Math.round(unitPriceLBP).toLocaleString()}) each
+                    $${item.product.price.toFixed(2)} (${Math.round(unitPriceLBP).toLocaleString()} LBP each)
                   </div>
                   <div class="dual-currency">
-                    ${Math.round(itemTotalLBP).toLocaleString()}
+                    ${Math.round(itemTotalLBP).toLocaleString()} LBP
                   </div>
                 </div>
               `;
@@ -222,20 +221,14 @@ export function CheckoutModal({
               <span>Subtotal:</span>
               <span>$${total.toFixed(2)}</span>
             </div>
-            <div class="dual-currency">${Math.round(total * exchangeRate).toLocaleString()}</div>
-            
-            <div class="total-line">
-              <span>Tax (${(taxRate * 100).toFixed(1)}%):</span>
-              <span>$${tax.toFixed(2)}</span>
-            </div>
-            <div class="dual-currency">${Math.round(tax * exchangeRate).toLocaleString()}</div>
+            <div class="dual-currency">${Math.round(total * exchangeRate).toLocaleString()} LBP</div>
             
             <div class="total-line final-total">
               <span>TOTAL:</span>
               <span>$${finalTotal.toFixed(2)}</span>
             </div>
             <div class="dual-currency" style="font-weight: bold; font-size: 12px;">
-              ${Math.round(finalTotal * exchangeRate).toLocaleString()}
+              ${Math.round(finalTotal * exchangeRate).toLocaleString()} LBP
             </div>
           </div>
 
@@ -338,13 +331,7 @@ export function CheckoutModal({
                     <div className="text-sm">{formatDualCurrency(total).lbp}</div>
                   </div>
                 </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Tax ({(taxRate * 100).toFixed(1)}%):</span>
-                  <div className="text-right">
-                    <div>{formatDualCurrency(tax).usd}</div>
-                    <div className="text-sm">{formatDualCurrency(tax).lbp}</div>
-                  </div>
-                </div>
+
                 <div className="flex justify-between text-lg font-bold text-gray-800 border-t border-gray-200 pt-2">
                   <span>Total:</span>
                   <div className="text-right">
