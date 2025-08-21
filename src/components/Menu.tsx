@@ -73,8 +73,15 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
     return acc;
   }, {} as Record<string, { id: string; products: Product[] }>);
 
-  // Sort categories to maintain consistent order
-  const sortedCategories = Object.entries(groupedProducts).sort(([a], [b]) => a.localeCompare(b));
+  // Sort categories, placing "Add-ons" last
+  const sortedCategories = Object.entries(groupedProducts).sort(([a], [b]) => {
+    const isAAddon = a.toLowerCase().includes('add-on') || a.toLowerCase().includes('addon');
+    const isBAddon = b.toLowerCase().includes('add-on') || b.toLowerCase().includes('addon');
+    
+    if (isAAddon && !isBAddon) return 1; // Place A (Add-ons) after B
+    if (!isAAddon && isBAddon) return -1; // Place B (Add-ons) after A
+    return a.localeCompare(b); // Alphabetical sort for non-Add-ons
+  });
 
   const filteredProducts =
     selectedCategory === 'all'
