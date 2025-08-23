@@ -1,9 +1,22 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { TrendingUp, DollarSign, ShoppingCart, Users, Package, AlertTriangle, Clock, RefreshCw } from 'lucide-react';
 import { useDashboardStats } from '../../hooks/useDashboardStats';
+import { Line, Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
+
+// Register Chart.js components
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
 export function Dashboard() {
   const { stats, loading, error, refetch } = useDashboardStats();
+  const [selectedDays, setSelectedDays] = useState('7');
+
+  const handleDaysChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newDays = parseInt(event.target.value);
+    setSelectedDays(event.target.value);
+    refetch(newDays);
+  };
 
   if (loading) {
     return (
@@ -18,7 +31,7 @@ export function Dashboard() {
       <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center justify-between">
         <span>Error: {error}</span>
         <button
-          onClick={refetch}
+          onClick={() => refetch()}
           className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm flex items-center gap-1"
         >
           <RefreshCw size={14} />
@@ -30,7 +43,7 @@ export function Dashboard() {
 
   const statCards = [
     {
-      title: 'Today\'s Sales',
+      title: "Today's Sales",
       value: `$${stats.todaySales.toFixed(2)}`,
       icon: DollarSign,
       color: 'bg-green-500',
@@ -56,8 +69,143 @@ export function Dashboard() {
       icon: AlertTriangle,
       color: 'bg-red-500',
       change: 'Need attention'
+    },
+    {
+      title: 'Items Ordered Today',
+      value: stats.totalItemsOrdered.toString(),
+      icon: Package,
+      color: 'bg-purple-500',
+      change: `${stats.totalItemsOrdered} items`
     }
   ];
+
+  // Line chart data for daily items ordered
+  const lineChartDataItems = {
+    labels: stats.dailyItemsOrdered.map((item: { date: any; }) => item.date),
+    datasets: [
+      {
+        label: 'Items Ordered',
+        data: stats.dailyItemsOrdered.map((item: { quantity: any; }) => item.quantity),
+        borderColor: '#f97316',
+        backgroundColor: 'rgba(249, 115, 22, 0.2)',
+        fill: true,
+        tension: 0.4
+      }
+    ]
+  };
+
+  const lineChartOptionsItems = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const
+      },
+      title: {
+        display: true,
+        text: `Items Ordered Per Day (Last ${selectedDays} Days)`
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Items Ordered'
+        }
+      },
+      x: {
+        title: {
+          display: true,
+          text: 'Date'
+        }
+      }
+    }
+  };
+
+  // Line chart data for daily sales
+  const lineChartDataSales = {
+    labels: stats.dailySales.map((item: { date: any; }) => item.date),
+    datasets: [
+      {
+        label: 'Sales ($)',
+        data: stats.dailySales.map((item: { total: any; }) => item.total),
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+        fill: true,
+        tension: 0.4
+      }
+    ]
+  };
+
+  const lineChartOptionsSales = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const
+      },
+      title: {
+        display: true,
+        text: `Daily Sales (Last ${selectedDays} Days)`
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Sales ($)'
+        }
+      },
+      x: {
+        title: {
+          display: true,
+          text: 'Date'
+        }
+      }
+    }
+  };
+
+  // Bar chart data for top products by date
+  const barChartData = {
+    labels: stats.topProductsByDate.map((product: { name: any; }) => product.name),
+    datasets: [
+      {
+        label: 'Total Sold',
+        data: stats.topProductsByDate.map((product: { total_sold: any; }) => product.total_sold),
+        backgroundColor: ['#10b981', '#3b82f6', '#f97316', '#ef4444', '#8b5cf6'],
+        borderColor: ['#10b981', '#3b82f6', '#f97316', '#ef4444', '#8b5cf6'],
+        borderWidth: 1
+      }
+    ]
+  };
+
+  const barChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const
+      },
+      title: {
+        display: true,
+        text: `Top Products Sales (Last ${selectedDays} Days)`
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Items Sold'
+        }
+      },
+      x: {
+        title: {
+          display: true,
+          text: 'Product'
+        }
+      }
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -66,13 +214,30 @@ export function Dashboard() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
           <p className="text-gray-600">Welcome back! Here's what's happening at your store today.</p>
         </div>
-        <button
-          onClick={refetch}
-          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-        >
-          <RefreshCw size={16} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <label htmlFor="daysFilter" className="text-sm font-medium text-gray-700">
+              Show last:
+            </label>
+            <select
+              id="daysFilter"
+              value={selectedDays}
+              onChange={handleDaysChange}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <option value="7">7 Days</option>
+              <option value="14">14 Days</option>
+              <option value="30">30 Days</option>
+            </select>
+          </div>
+          <button
+            onClick={() => refetch()}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            <RefreshCw size={16} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -99,6 +264,28 @@ export function Dashboard() {
         })}
       </div>
 
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Items Ordered Trend</h3>
+          <div className="h-80">
+            <Line data={lineChartDataItems} options={lineChartOptionsItems} />
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Daily Sales Trend</h3>
+          <div className="h-80">
+            <Line data={lineChartDataSales} options={lineChartOptionsSales} />
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Products Sales</h3>
+          <div className="h-80">
+            <Bar data={barChartData} options={barChartOptions} />
+          </div>
+        </div>
+      </div>
+
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Orders */}
@@ -106,7 +293,7 @@ export function Dashboard() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Orders</h3>
           <div className="space-y-4">
             {stats.recentOrders.length > 0 ? (
-              stats.recentOrders.map((order) => (
+              stats.recentOrders.map((order: { id: React.Key | null | undefined; order_number: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; customer_name: any; status: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined; total_amount: number; payment_method: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; }) => (
                 <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium text-gray-900">#{order.order_number}</p>
@@ -138,23 +325,32 @@ export function Dashboard() {
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Selling Products</h3>
           <div className="space-y-4">
-            {stats.topProducts.map((product, index) => (
-              <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="bg-orange-100 text-orange-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">
-                    {index + 1}
+            {stats.topProducts.length > 0 ? (
+              stats.topProducts.map((product: { id: React.Key | null | undefined; name: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; price: number; total_sold: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined; }, index: number) => (
+                <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-orange-100 text-orange-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{product.name}</p>
+                      <p className="text-sm text-gray-600">${product.price.toFixed(2)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{product.name}</p>
-                    <p className="text-sm text-gray-600">${product.price.toFixed(2)}</p>
+                  <div className="text-right">
+                    <p className="font-semibold text-gray-900">{product.total_sold} sold</p>
+                    <p className="text-sm text-gray-600">
+                      ${((Number(product.total_sold ?? 0) * product.price).toFixed(2))}
+                    </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold text-gray-900">{product.total_sold} sold</p>
-                  <p className="text-sm text-gray-600">${(product.total_sold * product.price).toFixed(2)}</p>
-                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Package size={48} className="mx-auto mb-4 opacity-50" />
+                <p>No top selling products</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>

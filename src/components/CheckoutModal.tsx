@@ -7,26 +7,38 @@ interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
   cartItems: CartItem[];
-  onOrderComplete: (customerName: string, paymentMethod: string) => void;
+  isDelivery: boolean; // Added prop
+  deliveryFee: number; // Added prop
+  onOrderComplete: (customerName: string, paymentMethod: string, isDelivery: boolean, deliveryFee: number) => void; // Updated callback
   loading: boolean;
 }
 
-export function CheckoutModal({ 
-  isOpen, 
-  onClose, 
-  cartItems, 
-  onOrderComplete, 
-  loading 
+export function CheckoutModal({
+  isOpen,
+  onClose,
+  cartItems,
+  isDelivery: initialIsDelivery,
+  deliveryFee: initialDeliveryFee,
+  onOrderComplete,
+  loading,
 }: CheckoutModalProps) {
   const [customerName, setCustomerName] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [showSuccess, setShowSuccess] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
+  const [isDelivery, setIsDelivery] = useState(initialIsDelivery); // Initialize from prop
+  const [deliveryFee, setDeliveryFee] = useState(initialDeliveryFee); // Initialize from prop
   const { settings } = useSettings();
 
-  // ✅ Total without tax
-  const total = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const finalTotal = total;
+  // Sync state with props if they change
+  useEffect(() => {
+    setIsDelivery(initialIsDelivery);
+    setDeliveryFee(initialDeliveryFee);
+  }, [initialIsDelivery, initialDeliveryFee]);
+
+  // Total without tax
+  const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const finalTotal = isDelivery ? subtotal + deliveryFee : subtotal;
 
   const formatCurrency = (amount: number) => {
     const currency = settings?.currency || 'USD';
@@ -43,22 +55,27 @@ export function CheckoutModal({
     const amountLBP = amountUSD * exchangeRate;
     return {
       usd: `$${amountUSD.toFixed(2)}`,
-      lbp: `${Math.round(amountLBP).toLocaleString()} LBP`
+      lbp: `${Math.round(amountLBP).toLocaleString()} LBP`,
     };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!customerName.trim()) {
       alert('Please enter customer name');
+      return;
+    }
+
+    if (isDelivery && deliveryFee < 0) {
+      alert('Delivery fee cannot be negative');
       return;
     }
 
     try {
       const generatedOrderNumber = `ORD-${Date.now()}`;
       setOrderNumber(generatedOrderNumber);
-      await onOrderComplete(customerName.trim(), paymentMethod);
+      await onOrderComplete(customerName.trim(), paymentMethod, isDelivery, deliveryFee);
       setShowSuccess(true);
     } catch (error) {
       console.error('Order failed:', error);
@@ -104,6 +121,7 @@ export function CheckoutModal({
               font-weight: bold; 
               font-size: 16px; 
               margin-bottom: 2px;
+              font-style: italic;
             }
             .store-info {
               font-size: 10px;
@@ -185,6 +203,7 @@ export function CheckoutModal({
             <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
             <div><strong>Time:</strong> ${new Date().toLocaleTimeString()}</div>
             <div><strong>Payment:</strong> ${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}</div>
+            ${isDelivery ? `<div><strong>Delivery:</strong> Yes ($${deliveryFee.toFixed(2)})</div>` : ''}
           </div>
 
           <div class="exchange-rate">
@@ -194,12 +213,13 @@ export function CheckoutModal({
           <div class="separator"></div>
 
           <div class="items-table">
-            ${cartItems.map(item => {
-              const itemTotalUSD = item.product.price * item.quantity;
-              const itemTotalLBP = itemTotalUSD * exchangeRate;
-              const unitPriceLBP = item.product.price * exchangeRate;
-              
-              return `
+            ${cartItems
+              .map((item) => {
+                const itemTotalUSD = item.product.price * item.quantity;
+                const itemTotalLBP = itemTotalUSD * exchangeRate;
+                const unitPriceLBP = item.product.price * exchangeRate;
+
+                return `
                 <div class="item-row">
                   <div class="item-header">
                     <span>${item.product.name} x${item.quantity}</span>
@@ -213,16 +233,27 @@ export function CheckoutModal({
                   </div>
                 </div>
               `;
-            }).join('')}
+              })
+              .join('')}
           </div>
 
           <div class="total-section">
             <div class="total-line">
               <span>Subtotal:</span>
-              <span>$${total.toFixed(2)}</span>
+              <span>$${subtotal.toFixed(2)}</span>
             </div>
-            <div class="dual-currency">${Math.round(total * exchangeRate).toLocaleString()} LBP</div>
-            
+            <div class="dual-currency">${Math.round(subtotal * exchangeRate).toLocaleString()} LBP</div>
+            ${
+              isDelivery
+                ? `
+              <div class="total-line">
+                <span>Delivery Fee:</span>
+                <span>$${deliveryFee.toFixed(2)}</span>
+              </div>
+              <div class="dual-currency">${Math.round(deliveryFee * exchangeRate).toLocaleString()} LBP</div>
+            `
+                : ''
+            }
             <div class="total-line final-total">
               <span>TOTAL:</span>
               <span>$${finalTotal.toFixed(2)}</span>
@@ -251,6 +282,8 @@ export function CheckoutModal({
     setCustomerName('');
     setPaymentMethod('cash');
     setOrderNumber('');
+    setIsDelivery(initialIsDelivery); // Reset to prop value
+    setDeliveryFee(initialDeliveryFee); // Reset to prop value
   };
 
   if (!isOpen) return null;
@@ -264,7 +297,7 @@ export function CheckoutModal({
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Order Successful!</h2>
           <p className="text-gray-600 mb-4">Order #{orderNumber} has been processed successfully.</p>
-          
+
           <div className="flex gap-3">
             <button
               onClick={printInvoice}
@@ -322,16 +355,23 @@ export function CheckoutModal({
                   </div>
                 );
               })}
-              
               <div className="border-t border-gray-200 pt-3 space-y-2">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal:</span>
                   <div className="text-right">
-                    <div>{formatDualCurrency(total).usd}</div>
-                    <div className="text-sm">{formatDualCurrency(total).lbp}</div>
+                    <div>{formatDualCurrency(subtotal).usd}</div>
+                    <div className="text-sm">{formatDualCurrency(subtotal).lbp}</div>
                   </div>
                 </div>
-
+                {isDelivery && (
+                  <div className="flex justify-between text-gray-600">
+                    <span>Delivery Fee:</span>
+                    <div className="text-right">
+                      <div>{formatDualCurrency(deliveryFee).usd}</div>
+                      <div className="text-sm">{formatDualCurrency(deliveryFee).lbp}</div>
+                    </div>
+                  </div>
+                )}
                 <div className="flex justify-between text-lg font-bold text-gray-800 border-t border-gray-200 pt-2">
                   <span>Total:</span>
                   <div className="text-right">
@@ -360,6 +400,36 @@ export function CheckoutModal({
               />
             </div>
 
+            {/* Delivery Option */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <input
+                  type="checkbox"
+                  checked={isDelivery}
+                  onChange={(e) => setIsDelivery(e.target.checked)}
+                  className="mr-2"
+                />
+                Is this a delivery order?
+              </label>
+              {isDelivery && (
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Delivery Fee (USD)
+                  </label>
+                  <input
+                    type="number"
+                    value={deliveryFee}
+                    onChange={(e) => setDeliveryFee(Math.max(0, Number(e.target.value)))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Enter delivery fee"
+                    min="0"
+                    step="0.01"
+                    required
+                  />
+                </div>
+              )}
+            </div>
+
             {/* Payment Method */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -378,7 +448,6 @@ export function CheckoutModal({
                   <DollarSign className="mx-auto mb-2" size={24} />
                   <span className="font-medium">Cash</span>
                 </button>
-                
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('card')}

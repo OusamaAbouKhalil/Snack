@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -7,6 +8,7 @@ interface DashboardStats {
   pendingOrders: number;
   totalCustomers: number;
   lowStockItems: number;
+  totalItemsOrdered: number;
   recentOrders: Array<{
     id: string;
     order_number: string;
@@ -21,31 +23,36 @@ interface DashboardStats {
     price: number;
     total_sold: number;
   }>;
+  dailyItemsOrdered: Array<{ date: string; quantity: number }>;
+  topProductsByDate: Array<{ id: string; name: string; total_sold: number }>;
+  dailySales: Array<{ date: string; total: number }>;
 }
 
-export function useDashboardStats() {
+export function useDashboardStats(initialDays: number = 7) {
   const [stats, setStats] = useState<DashboardStats>({
     todaySales: 0,
     todayOrders: 0,
     pendingOrders: 0,
     totalCustomers: 0,
     lowStockItems: 0,
+    totalItemsOrdered: 0,
     recentOrders: [],
-    topProducts: []
+    topProducts: [],
+    dailyItemsOrdered: [],
+    topProductsByDate: [],
+    dailySales: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [days, setDays] = useState(initialDays);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
+  const fetchStats = async (daysFilter: number) => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const today = new Date().toISOString().split('T')[0];
+      const daysAgo = new Date(Date.now() - daysFilter * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
       // Today's sales and orders
       const { data: todayOrders, error: todayError } = await supabase
@@ -92,12 +99,110 @@ export function useDashboardStats() {
 
       if (recentError) throw recentError;
 
-      // Top products (mock data for now - would need order_items aggregation)
-      const topProducts = [
-        { id: '1', name: 'Classic Nutella', price: 8.50, total_sold: 45 },
-        { id: '2', name: 'Strawberry Banana', price: 9.75, total_sold: 32 },
-        { id: '3', name: 'Ham & Cheese', price: 10.50, total_sold: 28 }
-      ];
+      // Total items ordered today
+      const { data: itemsOrderedToday, error: itemsError } = await supabase
+        .from('order_items')
+        .select('quantity')
+        .gte('created_at', today);
+
+      if (itemsError) throw itemsError;
+
+      const totalItemsOrdered = itemsOrderedToday?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
+
+      // Daily items ordered (selected days)
+      const { data: dailyItemsData, error: dailyItemsError } = await supabase
+        .from('order_items')
+        .select('quantity, created_at')
+        .gte('created_at', daysAgo);
+
+      if (dailyItemsError) throw dailyItemsError;
+
+      const dailyItemsOrdered = Array.from({ length: daysFilter }, (_, i) => {
+        const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+        const dateStr = date.toISOString().split('T')[0];
+        const quantity = dailyItemsData
+          ?.filter(item => item.created_at.toString().startsWith(dateStr))
+          .reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
+        return { date: dateStr, quantity };
+      }).reverse();
+
+      // Daily sales (selected days)
+      const { data: dailySalesData, error: dailySalesError } = await supabase
+        .from('order_items')
+        .select('total_price, created_at')
+        .gte('created_at', daysAgo);
+
+      if (dailySalesError) throw dailySalesError;
+
+      const dailySales = Array.from({ length: daysFilter }, (_, i) => {
+        const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+        const dateStr = date.toISOString().split('T')[0];
+        const total = dailySalesData
+          ?.filter(item => item.created_at.toString().startsWith(dateStr))
+          .reduce((sum, item) => sum + (item.total_price || 0), 0) || 0;
+        return { date: dateStr, total };
+      }).reverse();
+
+      // Top selling products (all-time)
+      const { data: orderItemsData, error: orderItemsError } = await supabase
+        .from('order_items')
+        .select('product_id, quantity')
+        .order('quantity', { ascending: false });
+
+      if (orderItemsError) throw orderItemsError;
+
+      const productQuantities = orderItemsData?.reduce((acc, item) => {
+        acc[item.product_id] = (acc[item.product_id] || 0) + (item.quantity || 0);
+        return acc;
+      }, {} as Record<string, number>) || {};
+
+      const topProductIds = Object.entries(productQuantities)
+        .sort(([, qtyA], [, qtyB]) => qtyB - qtyA)
+        .slice(0, 5)
+        .map(([id]) => id);
+
+      // Top products by date (selected days)
+      const { data: topProductsByDateData, error: topProductsError } = await supabase
+        .from('order_items')
+        .select('product_id, quantity')
+        .gte('created_at', daysAgo)
+        .in('product_id', topProductIds);
+
+      if (topProductsError) throw topProductsError;
+
+      const topProductQuantities = topProductsByDateData?.reduce((acc, item) => {
+        acc[item.product_id] = (acc[item.product_id] || 0) + (item.quantity || 0);
+        return acc;
+      }, {} as Record<string, number>) || {};
+
+      // Fetch product details
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('id, name, price')
+        .in('id', topProductIds);
+
+      if (productsError) throw productsError;
+
+      const topProducts = productsData?.map(product => ({
+        id: product.id,
+        name: product.name || 'Unknown Product',
+        price: product.price || 0,
+        total_sold: productQuantities[product.id] || 0
+      })) || [];
+
+      const sortedTopProducts = topProductIds
+        .map(id => topProducts.find(p => p.id === id))
+        .filter((p): p is NonNullable<typeof p> => p != null);
+
+      const topProductsByDate = productsData?.map(product => ({
+        id: product.id,
+        name: product.name || 'Unknown Product',
+        total_sold: topProductQuantities[product.id] || 0
+      })) || [];
+
+      const sortedTopProductsByDate = topProductIds
+        .map(id => topProductsByDate.find(p => p.id === id))
+        .filter((p): p is NonNullable<typeof p> => p != null);
 
       setStats({
         todaySales,
@@ -105,8 +210,12 @@ export function useDashboardStats() {
         pendingOrders: pendingOrders?.length || 0,
         totalCustomers: customers?.length || 0,
         lowStockItems,
+        totalItemsOrdered,
         recentOrders: recentOrders || [],
-        topProducts
+        topProducts: sortedTopProducts,
+        dailyItemsOrdered,
+        topProductsByDate: sortedTopProductsByDate,
+        dailySales
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch dashboard stats');
@@ -116,5 +225,15 @@ export function useDashboardStats() {
     }
   };
 
-  return { stats, loading, error, refetch: fetchStats };
+  useEffect(() => {
+    fetchStats(days);
+  }, [days]);
+
+  return { stats, loading, error, refetch: (newDays?: number) => {
+    if (newDays !== undefined && newDays > 0) {
+      setDays(newDays);
+    } else {
+      fetchStats(days);
+    }
+  } };
 }
