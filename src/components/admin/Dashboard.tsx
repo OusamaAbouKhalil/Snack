@@ -11,12 +11,58 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarEleme
 export function Dashboard() {
   const { stats, loading, error, refetch } = useDashboardStats();
   const [selectedDays, setSelectedDays] = useState('7');
+  const [code, setCode] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [codeError, setCodeError] = useState<string | null>(null);
+
+  const correctCode = import.meta.env.VITE_DASHBOARD_CODE;
+
+  const handleCodeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (code === correctCode) {
+      setIsAuthenticated(true);
+      setCodeError(null);
+    } else {
+      setCodeError('Invalid code. Please try again.');
+      setCode('');
+    }
+  };
 
   const handleDaysChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newDays = parseInt(event.target.value);
     setSelectedDays(event.target.value);
     refetch(newDays);
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="bg-white rounded-xl shadow-sm p-8 max-w-md w-full">
+          <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Enter Dashboard Code</h1>
+          <form onSubmit={handleCodeSubmit} className="space-y-4">
+            <div>
+              <input
+                type="password"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Enter access code"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+              {codeError && (
+                <p className="text-red-600 text-sm mt-2">{codeError}</p>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+            >
+              Submit
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -81,11 +127,11 @@ export function Dashboard() {
 
   // Line chart data for daily items ordered
   const lineChartDataItems = {
-    labels: stats.dailyItemsOrdered.map((item: { date: any; }) => item.date),
+    labels: stats.dailyItemsOrdered.map(item => item.date),
     datasets: [
       {
         label: 'Items Ordered',
-        data: stats.dailyItemsOrdered.map((item: { quantity: any; }) => item.quantity),
+        data: stats.dailyItemsOrdered.map(item => item.quantity),
         borderColor: '#f97316',
         backgroundColor: 'rgba(249, 115, 22, 0.2)',
         fill: true,
@@ -124,11 +170,11 @@ export function Dashboard() {
 
   // Line chart data for daily sales
   const lineChartDataSales = {
-    labels: stats.dailySales.map((item: { date: any; }) => item.date),
+    labels: stats.dailySales.map(item => item.date),
     datasets: [
       {
         label: 'Sales ($)',
-        data: stats.dailySales.map((item: { total: any; }) => item.total),
+        data: stats.dailySales.map(item => item.total),
         borderColor: '#10b981',
         backgroundColor: 'rgba(16, 185, 129, 0.2)',
         fill: true,
@@ -167,11 +213,11 @@ export function Dashboard() {
 
   // Bar chart data for top products by date
   const barChartData = {
-    labels: stats.topProductsByDate.map((product: { name: any; }) => product.name),
+    labels: stats.topProductsByDate.map(product => product.name),
     datasets: [
       {
         label: 'Total Sold',
-        data: stats.topProductsByDate.map((product: { total_sold: any; }) => product.total_sold),
+        data: stats.topProductsByDate.map(product => product.total_sold),
         backgroundColor: ['#10b981', '#3b82f6', '#f97316', '#ef4444', '#8b5cf6'],
         borderColor: ['#10b981', '#3b82f6', '#f97316', '#ef4444', '#8b5cf6'],
         borderWidth: 1
@@ -293,7 +339,7 @@ export function Dashboard() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Orders</h3>
           <div className="space-y-4">
             {stats.recentOrders.length > 0 ? (
-              stats.recentOrders.map((order: { id: React.Key | null | undefined; order_number: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; customer_name: any; status: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined; total_amount: number; payment_method: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; }) => (
+              stats.recentOrders.map((order) => (
                 <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium text-gray-900">#{order.order_number}</p>
@@ -326,7 +372,7 @@ export function Dashboard() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Selling Products</h3>
           <div className="space-y-4">
             {stats.topProducts.length > 0 ? (
-              stats.topProducts.map((product: { id: React.Key | null | undefined; name: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; price: number; total_sold: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined; }, index: number) => (
+              stats.topProducts.map((product, index) => (
                 <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="bg-orange-100 text-orange-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">
@@ -339,9 +385,7 @@ export function Dashboard() {
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-gray-900">{product.total_sold} sold</p>
-                    <p className="text-sm text-gray-600">
-                      ${((Number(product.total_sold ?? 0) * product.price).toFixed(2))}
-                    </p>
+                    <p className="text-sm text-gray-600">${(product.total_sold * product.price).toFixed(2)}</p>
                   </div>
                 </div>
               ))

@@ -158,7 +158,7 @@ export function useDashboardStats(initialDays: number = 7) {
 
       const topProductIds = Object.entries(productQuantities)
         .sort(([, qtyA], [, qtyB]) => qtyB - qtyA)
-        .slice(0, 5)
+        .slice(0, 50)
         .map(([id]) => id);
 
       // Top products by date (selected days)
