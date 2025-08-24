@@ -326,7 +326,7 @@ export function SalesReports() {
                   ></div>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>{category.total_orders} orders</span>
+                  <span>{category.total_orders} orders(May include multible item)</span>
                   <span>
                     {(
                       (category.total_revenue / reports.totalRevenue) *
