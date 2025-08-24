@@ -58,6 +58,7 @@ export function useDashboardStats(initialDays: number = 7) {
       const { data: todayOrders, error: todayError } = await supabase
         .from('orders')
         .select('total_amount')
+        .eq('status', 'completed')
         .gte('created_at', today);
 
       if (todayError) throw todayError;

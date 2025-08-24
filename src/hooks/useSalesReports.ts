@@ -48,6 +48,7 @@ export function useSalesReports(startDate: string, endDate: string) {
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('id, total_amount, created_at')
+        .eq('status', 'completed')
         .gte('created_at', startDate)
         .lte('created_at', `${endDate}T23:59:59`);
 
