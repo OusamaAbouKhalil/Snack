@@ -311,7 +311,7 @@ export function SalesReports() {
                   <span className="font-medium text-gray-900">
                     {category.category_name}
                   </span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-yellow-600">
                     ${category.total_revenue.toFixed(2)}
                   </span>
                 </div>
@@ -326,8 +326,13 @@ export function SalesReports() {
                   ></div>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>{category.total_orders} orders(May include multible item)</span>
-                  <span>
+                  <span>{category.total_orders} orders <br /> 
+                    <span className="italic text-red-800" >
+                      *(May include multible item of the same order)
+                    </span>
+
+                  </span>
+                  <span className="font-medium text-green-600">
                     {(
                       (category.total_revenue / reports.totalRevenue) *
                       100
