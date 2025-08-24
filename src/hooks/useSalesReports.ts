@@ -61,9 +61,8 @@ export function useSalesReports(startDate: string, endDate: string) {
       // Total items sold
       const { data: itemsData, error: itemsError } = await supabase
         .from('order_items')
-        .select('quantity')
-        .gte('created_at', startDate)
-        .lte('created_at', `${endDate}T23:59:59`);
+        .select('quantity, order_id')
+        .in('order_id', ordersData?.map(o => o.id) || []);
 
       if (itemsError) throw itemsError;
 
@@ -73,8 +72,7 @@ export function useSalesReports(startDate: string, endDate: string) {
       const { data: topProductsData, error: topProductsError } = await supabase
         .from('order_items')
         .select('product_id, quantity, total_price')
-        .gte('created_at', startDate)
-        .lte('created_at', `${endDate}T23:59:59`);
+        .in('order_id', ordersData?.map(o => o.id) || []);
 
       if (topProductsError) throw topProductsError;
 
@@ -113,14 +111,15 @@ export function useSalesReports(startDate: string, endDate: string) {
       // Sales by category
       const { data: categoryData, error: categoryError } = await supabase
         .from('order_items')
-        .select('products!inner(category_id), total_price, order_id')
-        .gte('created_at', startDate)
-        .lte('created_at', `${endDate}T23:59:59`);
+        .select('order_id, total_price, products!inner(category_id)')
+        .in('order_id', ordersData?.map(o => o.id) || []);
 
       if (categoryError) throw categoryError;
 
+      console.log('Category Data:', JSON.stringify(categoryData, null, 2));
+
       const categoryStats = categoryData?.reduce((acc, item) => {
-        const categoryId = Array.isArray(item.products) && item.products.length > 0 ? item.products[0].category_id : undefined;
+        const categoryId = item.products?.category_id;
         if (categoryId) {
           if (!acc[categoryId]) {
             acc[categoryId] = { total_revenue: 0, order_ids: new Set<string>() };
@@ -131,6 +130,8 @@ export function useSalesReports(startDate: string, endDate: string) {
         return acc;
       }, {} as Record<string, { total_revenue: number; order_ids: Set<string> }>) || {};
 
+      console.log('Category Stats:', JSON.stringify(categoryStats, null, 2));
+
       const categoryIds = Object.keys(categoryStats);
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
@@ -138,6 +139,8 @@ export function useSalesReports(startDate: string, endDate: string) {
         .in('id', categoryIds);
 
       if (categoriesError) throw categoriesError;
+
+      console.log('Categories Data:', JSON.stringify(categoriesData, null, 2));
 
       const salesByCategory = categoryIds
         .map(id => {
@@ -155,8 +158,7 @@ export function useSalesReports(startDate: string, endDate: string) {
       const { data: dailySalesData, error: dailySalesError } = await supabase
         .from('order_items')
         .select('total_price, created_at, order_id, quantity')
-        .gte('created_at', startDate)
-        .lte('created_at', `${endDate}T23:59:59`);
+        .in('order_id', ordersData?.map(o => o.id) || []);
 
       if (dailySalesError) throw dailySalesError;
 
