@@ -114,7 +114,7 @@ export function useDashboardStats(initialDays: number = 7) {
       const { data: dailyItemsData, error: dailyItemsError } = await supabase
         .from('order_items')
         .select('quantity, created_at')
-        .gte('created_at', daysAgo);
+        .gte('created_at', today);
 
       if (dailyItemsError) throw dailyItemsError;
 
@@ -131,7 +131,7 @@ export function useDashboardStats(initialDays: number = 7) {
       const { data: dailySalesData, error: dailySalesError } = await supabase
         .from('order_items')
         .select('total_price, created_at')
-        .gte('created_at', daysAgo);
+        .gte('created_at', today);
 
       if (dailySalesError) throw dailySalesError;
 
@@ -147,7 +147,9 @@ export function useDashboardStats(initialDays: number = 7) {
       // Top selling products (all-time)
       const { data: orderItemsData, error: orderItemsError } = await supabase
         .from('order_items')
-        .select('product_id, quantity')
+        .select('product_id, quantity, created_at')
+        .gte('created_at', today)
+        //today 
         .order('quantity', { ascending: false });
 
       if (orderItemsError) throw orderItemsError;
@@ -166,7 +168,7 @@ export function useDashboardStats(initialDays: number = 7) {
       const { data: topProductsByDateData, error: topProductsError } = await supabase
         .from('order_items')
         .select('product_id, quantity')
-        .gte('created_at', daysAgo)
+        .gte('created_at', today)
         .in('product_id', topProductIds);
 
       if (topProductsError) throw topProductsError;
