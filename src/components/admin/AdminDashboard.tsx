@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, BarChart3, Package, Users, Settings, FileText, TrendingUp, ShoppingCart, Shield, Home } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BarChart3, Package, Users, Settings, FileText, TrendingUp, ShoppingCart, Shield, Home } from 'lucide-react';
 import { Dashboard } from './Dashboard';
 import { ProductManagement } from './ProductManagement';
 import { CategoryManagement } from './CategoryManagement';
@@ -15,14 +15,25 @@ interface AdminDashboardProps {
   onClose: () => void;
 }
 
-type AdminView = 'dashboard' | 'products' | 'categories' | 'orders' | 'order-management' | 'inventory' | 'customers' | 'settings' | 'reports' | 'admin-users';
+type AdminView = 
+  | 'dashboard' 
+  | 'products' 
+  | 'categories' 
+  | 'orders' 
+  | 'order-management' 
+  | 'inventory' 
+  | 'customers' 
+  | 'settings' 
+  | 'reports' 
+  | 'admin-users';
 
 export function AdminDashboard({ onClose }: AdminDashboardProps) {
   const [activeView, setActiveView] = useState<AdminView>('dashboard');
+  const [collapsed, setCollapsed] = useState(true); // <-- collapsed by default
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'order-management', label: 'Order Management', icon: ShoppingCart },
+    { id: 'order-management', label: 'Order Mgmt', icon: ShoppingCart },
     { id: 'products', label: 'Products', icon: Package },
     { id: 'categories', label: 'Categories', icon: FileText },
     { id: 'orders', label: 'Order History', icon: ShoppingCart },
@@ -35,45 +46,43 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
   const renderContent = () => {
     switch (activeView) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'order-management':
-        return <OrderManagement />;
-      case 'products':
-        return <ProductManagement />;
-      case 'categories':
-        return <CategoryManagement />;
-      case 'orders':
-        return <OrderHistory />;
-      case 'inventory':
-        return <InventoryManagement />;
-      case 'customers':
-        return <CustomerManagement />;
-      case 'settings':
-        return <SettingsPanel />;
-      case 'reports':
-        return <SalesReports />;
-      case 'admin-users':
-        return <AdminUserManagement />;
-      default:
-        return <Dashboard />;
+      case 'dashboard': return <Dashboard />;
+      case 'order-management': return <OrderManagement />;
+      case 'products': return <ProductManagement />;
+      case 'categories': return <CategoryManagement />;
+      case 'orders': return <OrderHistory />;
+      case 'inventory': return <InventoryManagement />;
+      case 'customers': return <CustomerManagement />;
+      case 'settings': return <SettingsPanel />;
+      case 'reports': return <SalesReports />;
+      case 'admin-users': return <AdminUserManagement />;
+      default: return <Dashboard />;
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-800">Admin Panel</h2>
+      <div className={`${collapsed ? 'w-20' : 'w-64'} bg-white shadow-lg transition-all duration-300`}>
+        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+          {!collapsed && <h2 className="text-lg font-bold text-gray-800">Admin Panel</h2>}
+          <div className="flex gap-2">
             <button
-              onClick={onClose}
+              onClick={() => setCollapsed(!collapsed)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Back to Main Site"
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              <Home size={20} />
+              {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
             </button>
+            {!collapsed && (
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Back to Main Site"
+              >
+                <Home size={20} />
+              </button>
+            )}
           </div>
         </div>
         
@@ -85,14 +94,13 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 <li key={item.id}>
                   <button
                     onClick={() => setActiveView(item.id as AdminView)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                      activeView === item.id
-                        ? 'bg-primary-100 text-primary-700 font-medium'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
+                    className={`w-full flex items-center rounded-lg px-4 py-3 transition-colors 
+                      ${activeView === item.id 
+                        ? 'bg-primary-100 text-primary-700 font-medium' 
+                        : 'text-gray-600 hover:bg-gray-100'}`}
                   >
                     <Icon size={20} />
-                    {item.label}
+                    {!collapsed && <span className="ml-3">{item.label}</span>}
                   </button>
                 </li>
               );
