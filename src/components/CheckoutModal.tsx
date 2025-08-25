@@ -222,10 +222,10 @@ export function CheckoutModal({
                 return `
                 <div class="item-row">
                   <div class="item-header">
-                    <span>${item.product.name} x${item.quantity}</span>
-                    <span>$${itemTotalUSD.toFixed(2)}</span>
+                    <span class="font-bold">${item.product.name} x${item.quantity}</span>
+                    <span class="font-bold">$${itemTotalUSD.toFixed(2)}</span>
                   </div>
-                  <div class="item-details">
+                  <div class="item-details font-bold" >
                     $${item.product.price.toFixed(2)} (${Math.round(unitPriceLBP).toLocaleString()} LBP each)
                   </div>
                   <div class="dual-currency">
@@ -265,7 +265,7 @@ export function CheckoutModal({
 
           <div class="footer">
             <div>Thank you for your business!</div>
-            <div>Visit us again soon!</div>
+            <div>Visit us again soon!!</div>
           </div>
         </body>
       </html>

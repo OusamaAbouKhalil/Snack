@@ -173,7 +173,7 @@ export function SettingsPanel() {
                 <option value="EUR">EUR (€)</option>
                 <option value="GBP">GBP (£)</option>
                 <option value="CAD">CAD (C$)</option>
-                <option value="LBP">LBP (ل.ل)</option>
+                <option value="LBP">LBP (LBP)</option>
               </select>
             </div>
 

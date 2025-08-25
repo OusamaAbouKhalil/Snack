@@ -49,7 +49,7 @@ export function OrderManagement() {
   const formatCurrency = (amount: number) => {
     const usd = amount.toFixed(2);
     const lbp = Math.round(amount * EXCHANGE_RATE).toLocaleString();
-    return `${usd}$ / ${lbp} ل.ل`;
+    return `${usd}$ / ${lbp} LBP`;
   };
 
   const addToCart = (productId: string) => {
@@ -124,7 +124,7 @@ export function OrderManagement() {
     const formatPrintCurrency = (amount: number) => {
       const usd = amount.toFixed(2);
       const lbp = Math.round(amount * EXCHANGE_RATE).toLocaleString();
-      return `${usd}$ / ${lbp} ل.ل`;
+      return `${usd}$ / ${lbp} LBP`;
     };
 
     const printWindow = window.open("", "_blank");
@@ -181,15 +181,19 @@ export function OrderManagement() {
           .item-name {
             flex: 1;
             padding-right: 4px;
+            font-weight: bold;
+
           }
           .item-qty {
             width: 20px;
             text-align: center;
+            font-weight: bold;
           }
           .item-price {
             width: 80px;
             text-align: right;
             white-space: nowrap;
+            font-weight: bold;
           }
           .separator {
             border-top: 1px dashed #000;
@@ -217,15 +221,20 @@ export function OrderManagement() {
         </style>
       </head>
       <body>
-        <div class="header">
-          <div class="logo">${storeName}</div>
-          ${storeAddress ? `<div class="store-info">${storeAddress}</div>` : ""}
-          ${storePhone ? `<div class="store-info">${storePhone}</div>` : ""}
-        </div>
+       <div class="header">
+                 <img
+                  src="/logo.png"
+                  alt="BeSweet Logo"
+                style="max-width:60px; margin:0 auto 4px; display:block;"
+                />
+                ${storeAddress ? `<div class="store-info">${storeAddress}</div>` : ""}
+                ${storePhone ? `<div class="store-info">${storePhone}</div>` : ""}
+              </div>
+
         
         <div class="order-info">
           <div><strong>Order:</strong> ${orderNumber}</div>
-          <div><strong>Customer:</strong> ${customer}</div>
+        <div>  <strong><strong>Customer:</strong> ${customer}</strong></div>
           <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
           <div><strong>Time:</strong> ${new Date().toLocaleTimeString()}</div>
           <div><strong>Payment:</strong> ${
@@ -235,20 +244,23 @@ export function OrderManagement() {
 
         <div class="separator"></div>
 
-        <div class="items-table">
-          ${items
-            .map(
-              (item) => `
-            <div class="item-row">
-              <div class="item-name">${item.product.name}</div>
-            </div>
-            <div style="font-size: 10px; color: #000000ff; margin-bottom: 4px;">
-              ${formatPrintCurrency(item.product.price)} x ${item.quantity}
-            </div>
-          `
-            )
-            .join("")}
+      <div class="items-table">
+  ${items
+    .map(
+      (item) => `
+        <div class="item-row">
+          <div class="item-name" style="font-weight:bold;">${
+            item.product.name
+          }</div>
         </div>
+        <div style="font-size:10px; color:#000000ff; margin-bottom:4px; font-weight:bold;">
+          ${formatPrintCurrency(item.product.price)} x ${item.quantity}
+        </div>
+      `
+    )
+    .join("")}
+</div>
+
 
         <div class="total-section">
           <div class="final-total">
