@@ -18,6 +18,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import * as XLSX from 'xlsx';
 
 // Register Chart.js components
 ChartJS.register(
@@ -56,6 +57,66 @@ export function SalesReports() {
       setCodeError("Invalid code. Please try again.");
       setCode("");
     }
+  };
+
+  // Excel export function for all displayed data
+  const exportToExcel = () => {
+    // Prepare summary data (from summary cards)
+    const summaryData = [{
+      'Total Revenue': `$${reports.totalRevenue.toFixed(2)}`,
+      'Total Orders': reports.totalOrders,
+      'Average Order Value': `$${reports.averageOrderValue.toFixed(2)}`,
+      'Total Items Sold': reports.totalItemsSold
+    }];
+
+    // Prepare daily sales data (from Daily Sales Trend table)
+    const dailySalesData = [...reports.dailySales]
+      .slice()
+      .reverse() // Match the reversed order shown in the table
+      .map(day => ({
+        Date: new Date(day.date).toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+        'Total Revenue': `$${day.total_revenue.toFixed(2)}`,
+        'Total Orders': day.total_orders,
+        'Total Items': day.total_items
+      }));
+
+    // Prepare top products data (from Top Selling Products section)
+    const topProductsData = reports.topProducts.map((product, index) => ({
+      Rank: index + 1,
+      'Product Name': product.name,
+      'Quantity Sold': product.quantity_sold,
+      'Total Revenue': `$${product.total_revenue.toFixed(2)}`
+    }));
+
+    // Prepare sales by category data (from Sales by Category section)
+    const salesByCategoryData = reports.salesByCategory.map(category => ({
+      'Category Name': category.category_name,
+      'Total Revenue': `$${category.total_revenue.toFixed(2)}`,
+      'Total Orders': category.total_orders,
+      'Percentage of Total Revenue': `${((category.total_revenue / reports.totalRevenue) * 100).toFixed(1)}%`
+    }));
+
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+
+    // Create and append worksheets
+    const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+    const dailySalesSheet = XLSX.utils.json_to_sheet(dailySalesData);
+    const topProductsSheet = XLSX.utils.json_to_sheet(topProductsData);
+    const salesByCategorySheet = XLSX.utils.json_to_sheet(salesByCategoryData);
+
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
+    XLSX.utils.book_append_sheet(workbook, dailySalesSheet, 'Daily Sales');
+    XLSX.utils.book_append_sheet(workbook, topProductsSheet, 'Top Products');
+    XLSX.utils.book_append_sheet(workbook, salesByCategorySheet, 'Sales by Category');
+
+    // Download Excel file
+    XLSX.writeFile(workbook, `Sales_Reports_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   if (!isAuthenticated) {
@@ -173,7 +234,10 @@ export function SalesReports() {
             Analyze your sales performance and trends
           </p>
         </div>
-        <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+        <button
+          onClick={exportToExcel}
+          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+        >
           <Download size={20} />
           Export Report
         </button>
@@ -327,10 +391,9 @@ export function SalesReports() {
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>{category.total_orders} orders <br /> 
-                    <span className="italic text-red-800" >
-                      *(May include multible item of the same order)
+                    <span className="italic text-red-800">
+                      *(May include multiple items of the same order)
                     </span>
-
                   </span>
                   <span className="font-medium text-green-600">
                     {(
@@ -357,15 +420,14 @@ export function SalesReports() {
       </div>
 
       {/* Daily Sales Trend Table */}
-      {/* Daily Sales Trend Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Daily Sales Trend
         </h3>
         <div className="space-y-3">
           {[...reports.dailySales]
-            .slice() // optional, ensures a copy
-            .reverse() // flips order
+            .slice()
+            .reverse()
             .map((day) => (
               <div
                 key={day.date}

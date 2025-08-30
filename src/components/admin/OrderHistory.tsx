@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, Calendar, Filter, Eye, Download, Check, X, Clock } from 'lucide-react';
 import { useOrderHistory } from '../../hooks/useOrderHistory';
 import { OrderDetailsModal } from './OrderDetailsModal';
+import * as XLSX from 'xlsx';
 
 export function OrderHistory() {
   const { orders, loading, updateOrderStatus, refetch } = useOrderHistory();
@@ -39,6 +40,34 @@ export function OrderHistory() {
     }
   };
 
+  // Excel export function
+  const exportToExcel = () => {
+    // Prepare order data for Excel
+    const orderData = orders.map(order => ({
+      'Order Number': order.order_number,
+      'Customer Name': order.customer_name || 'Walk-in Customer',
+      'Total Amount': `$${order.total_amount}`,
+      'Payment Method': order.payment_method,
+      Status: order.status.charAt(0).toUpperCase() + order.status.slice(1),
+      'Date': new Date(order.created_at).toLocaleString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      })
+    }));
+
+    // Create worksheet and workbook
+    const worksheet = XLSX.utils.json_to_sheet(orderData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders');
+
+    // Download Excel file
+    XLSX.writeFile(workbook, `Order_History_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   const pendingCount = orders.filter(order => order.status === 'pending').length;
 
   if (loading) {
@@ -62,7 +91,10 @@ export function OrderHistory() {
             </div>
           )}
         </div>
-        <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+        <button
+          onClick={exportToExcel}
+          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+        >
           <Download size={20} />
           Export Orders
         </button>
