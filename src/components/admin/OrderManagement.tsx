@@ -61,7 +61,10 @@ export function OrderManagement() {
 
   // Refetch products when modal opens to ensure latest products are shown
   const handleOpenCreateOrder = () => {
-    refetchProducts();
+    // Only refetch if we don't have products yet, otherwise use cached data
+    if (products.length === 0 && !productsLoading) {
+      refetchProducts();
+    }
     setShowCreateOrder(true);
   };
 
@@ -537,7 +540,7 @@ export function OrderManagement() {
                   </div>
 
                   {/* Products List */}
-                  {productsLoading ? (
+                  {productsLoading && products.length === 0 ? (
                     <div className="flex items-center justify-center h-64">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
                     </div>

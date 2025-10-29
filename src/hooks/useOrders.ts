@@ -63,25 +63,26 @@ export function useOrders() {
 
   const getOrderWithItems = async (orderId: string) => {
     try {
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', orderId)
-        .single();
+      // Fetch order and items in parallel for faster loading
+      const [orderResult, itemsResult] = await Promise.all([
+        supabase
+          .from('orders')
+          .select('*')
+          .eq('id', orderId)
+          .single(),
+        supabase
+          .from('order_items')
+          .select(`
+            *,
+            products (*)
+          `)
+          .eq('order_id', orderId)
+      ]);
 
-      if (orderError) throw orderError;
+      if (orderResult.error) throw orderResult.error;
+      if (itemsResult.error) throw itemsResult.error;
 
-      const { data: items, error: itemsError } = await supabase
-        .from('order_items')
-        .select(`
-          *,
-          products (*)
-        `)
-        .eq('order_id', orderId);
-
-      if (itemsError) throw itemsError;
-
-      return { order, items };
+      return { order: orderResult.data, items: itemsResult.data };
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch order');
       return null;

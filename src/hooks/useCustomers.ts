@@ -26,31 +26,42 @@ export function useCustomers() {
       setLoading(true);
       setError(null);
 
-      const { data, error: fetchError } = await supabase
-        .from('customers')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Fetch customers and order stats in parallel
+      const [customersResult, ordersResult] = await Promise.all([
+        supabase
+          .from('customers')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('orders')
+          .select('customer_name, total_amount')
+      ]);
 
-      if (fetchError) throw fetchError;
+      if (customersResult.error) throw customersResult.error;
+      if (ordersResult.error) throw ordersResult.error;
 
-      // Calculate total orders and spent for each customer
-      const customersWithStats = await Promise.all(
-        (data || []).map(async (customer) => {
-          const { data: orders } = await supabase
-            .from('orders')
-            .select('total_amount')
-            .eq('customer_name', customer.name);
+      const customers = customersResult.data || [];
+      const orders = ordersResult.data || [];
 
-          const totalOrders = orders?.length || 0;
-          const totalSpent = orders?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
+      // Process order stats in memory - much faster than N queries
+      const orderStats = orders.reduce((acc, order) => {
+        const name = order.customer_name;
+        if (!name) return acc;
+        
+        if (!acc[name]) {
+          acc[name] = { count: 0, total: 0 };
+        }
+        acc[name].count += 1;
+        acc[name].total += order.total_amount || 0;
+        return acc;
+      }, {} as Record<string, { count: number; total: number }>);
 
-          return {
-            ...customer,
-            total_orders: totalOrders,
-            total_spent: totalSpent
-          };
-        })
-      );
+      // Map customers with their stats
+      const customersWithStats = customers.map(customer => ({
+        ...customer,
+        total_orders: orderStats[customer.name]?.count || 0,
+        total_spent: orderStats[customer.name]?.total || 0
+      }));
 
       setCustomers(customersWithStats);
     } catch (err) {

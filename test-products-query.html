@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products Query Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-card h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: #f97316;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #ea580c;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+        }
+        .config {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Products Query Test Script</h1>
+    
+    <div class="config">
+        <h2>Supabase Configuration</h2>
+        <label>Supabase URL:</label>
+        <input type="text" id="supabaseUrl" placeholder="https://your-project.supabase.co">
+        
+        <label>Supabase Anon Key:</label>
+        <input type="text" id="supabaseKey" placeholder="your-anon-key">
+        
+        <button onclick="loadFromEnv()">Load from Environment (if available)</button>
+    </div>
+
+    <div class="test-card">
+        <h2>Test 1: Basic Products Query (Exact Match)</h2>
+        <p>Tests the exact query used in useProducts hook</p>
+        <button onclick="testBasicQuery()">Run Test</button>
+        <div id="result1" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>Test 2: Products Query without Ordering</h2>
+        <p>Tests if the ordering clause is causing issues</p>
+        <button onclick="testWithoutOrder()">Run Test</button>
+        <div id="result2" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>Test 3: Minimal Query (ID only)</h2>
+        <p>Tests with minimal data to isolate the issue</p>
+        <button onclick="testMinimalQuery()">Run Test</button>
+        <div id="result3" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>Test 4: Count Products Only</h2>
+        <p>Tests if we can even count products</p>
+        <button onclick="testCount()">Run Test</button>
+        <div id="result4" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>Test 5: Products with is_available filter</h2>
+        <p>Tests the onlyAvailable filter variant</p>
+        <button onclick="testAvailableOnly()">Run Test</button>
+        <div id="result5" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>Test 6: Categories Query</h2>
+        <p>Tests the categories query separately</p>
+        <button onclick="testCategories()">Run Test</button>
+        <div id="result6" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>Test 7: Performance Test (with timing)</h2>
+        <p>Measures query execution time</p>
+        <button onclick="testPerformance()">Run Test</button>
+        <div id="result7" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        let supabaseClient = null;
+
+        function initSupabase() {
+            const url = document.getElementById('supabaseUrl').value;
+            const key = document.getElementById('supabaseKey').value;
+            
+            if (!url || !key) {
+                alert('Please enter Supabase URL and Anon Key');
+                return false;
+            }
+            
+            supabaseClient = window.supabase.createClient(url, key);
+            return true;
+        }
+
+        function loadFromEnv() {
+            // Try to load from localStorage if previously saved
+            const savedUrl = localStorage.getItem('test_supabase_url');
+            const savedKey = localStorage.getItem('test_supabase_key');
+            
+            if (savedUrl) document.getElementById('supabaseUrl').value = savedUrl;
+            if (savedKey) document.getElementById('supabaseKey').value = savedKey;
+            
+            if (savedUrl && savedKey) {
+                initSupabase();
+                alert('Loaded saved credentials');
+            } else {
+                alert('No saved credentials found. Please enter them manually.');
+            }
+        }
+
+        function displayResult(id, data, isError = false) {
+            const div = document.getElementById(id);
+            div.style.display = 'block';
+            div.className = 'result ' + (isError ? 'error' : (data.success ? 'success' : 'info'));
+            div.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function testBasicQuery() {
+            if (!initSupabase()) return;
+            
+            const startTime = performance.now();
+            try {
+                const query = supabaseClient
+                    .from('products')
+                    .select('id, name, description, price, category_id, image_url, is_available, created_at')
+                    .order('name', { ascending: true });
+
+                const { data, error, status, statusText } = await query;
+                const endTime = performance.now();
+                
+                displayResult('result1', {
+                    success: !error,
+                    status,
+                    statusText,
+                    executionTime: `${(endTime - startTime).toFixed(2)}ms`,
+                    error: error ? {
+                        message: error.message,
+                        details: error.details,
+                        hint: error.hint,
+                        code: error.code
+                    } : null,
+                    dataCount: data ? data.length : 0,
+                    sampleData: data ? data.slice(0, 2) : null
+                }, !!error);
+            } catch (err) {
+                displayResult('result1', {
+                    success: false,
+                    error: {
+                        message: err.message,
+                        stack: err.stack
+                    }
+                }, true);
+            }
+        }
+
+        async function testWithoutOrder() {
+            if (!initSupabase()) return;
+            
+            const startTime = performance.now();
+            try {
+                const { data, error, status, statusText } = await supabaseClient
+                    .from('products')
+                    .select('id, name, description, price, category_id, image_url, is_available, created_at');
+                
+                const endTime = performance.now();
+                
+                displayResult('result2', {
+                    success: !error,
+                    status,
+                    statusText,
+                    executionTime: `${(endTime - startTime).toFixed(2)}ms`,
+                    error: error ? {
+                        message: error.message,
+                        details: error.details,
+                        hint: error.hint,
+                        code: error.code
+                    } : null,
+                    dataCount: data ? data.length : 0
+                }, !!error);
+            } catch (err) {
+                displayResult('result2', {
+                    success: false,
+                    error: { message: err.message }
+                }, true);
+            }
+        }
+
+        async function testMinimalQuery() {
+            if (!initSupabase()) return;
+            
+            const startTime = performance.now();
+            try {
+                const { data, error, status } = await supabaseClient
+                    .from('products')
+                    .select('id')
+                    .limit(10);
+                
+                const endTime = performance.now();
+                
+                displayResult('result3', {
+                    success: !error,
+                    status,
+                    executionTime: `${(endTime - startTime).toFixed(2)}ms`,
+                    error: error ? {
+                        message: error.message,
+                        code: error.code
+                    } : null,
+                    dataCount: data ? data.length : 0
+                }, !!error);
+            } catch (err) {
+                displayResult('result3', {
+                    success: false,
+                    error: { message: err.message }
+                }, true);
+            }
+        }
+
+        async function testCount() {
+            if (!initSupabase()) return;
+            
+            const startTime = performance.now();
+            try {
+                const { count, error, status } = await supabaseClient
+                    .from('products')
+                    .select('*', { count: 'exact', head: true });
+                
+                const endTime = performance.now();
+                
+                displayResult('result4', {
+                    success: !error,
+                    status,
+                    executionTime: `${(endTime - startTime).toFixed(2)}ms`,
+                    error: error ? {
+                        message: error.message,
+                        code: error.code
+                    } : null,
+                    count
+                }, !!error);
+            } catch (err) {
+                displayResult('result4', {
+                    success: false,
+                    error: { message: err.message }
+                }, true);
+            }
+        }
+
+        async function testAvailableOnly() {
+            if (!initSupabase()) return;
+            
+            const startTime = performance.now();
+            try {
+                const { data, error, status } = await supabaseClient
+                    .from('products')
+                    .select('id, name, description, price, category_id, image_url, is_available, created_at')
+                    .eq('is_available', true)
+                    .order('name', { ascending: true });
+                
+                const endTime = performance.now();
+                
+                displayResult('result5', {
+                    success: !error,
+                    status,
+                    executionTime: `${(endTime - startTime).toFixed(2)}ms`,
+                    error: error ? {
+                        message: error.message,
+                        code: error.code
+                    } : null,
+                    dataCount: data ? data.length : 0
+                }, !!error);
+            } catch (err) {
+                displayResult('result5', {
+                    success: false,
+                    error: { message: err.message }
+                }, true);
+            }
+        }
+
+        async function testCategories() {
+            if (!initSupabase()) return;
+            
+            const startTime = performance.now();
+            try {
+                const { data, error, status } = await supabaseClient
+                    .from('categories')
+                    .select('id, name, display_order, created_at')
+                    .order('display_order', { ascending: true });
+                
+                const endTime = performance.now();
+                
+                displayResult('result6', {
+                    success: !error,
+                    status,
+                    executionTime: `${(endTime - startTime).toFixed(2)}ms`,
+                    error: error ? {
+                        message: error.message,
+                        code: error.code
+                    } : null,
+                    dataCount: data ? data.length : 0,
+                    data
+                }, !!error);
+            } catch (err) {
+                displayResult('result6', {
+                    success: false,
+                    error: { message: err.message }
+                }, true);
+            }
+        }
+
+        async function testPerformance() {
+            if (!initSupabase()) return;
+            
+            const results = [];
+            const iterations = 5;
+            
+            for (let i = 0; i < iterations; i++) {
+                const startTime = performance.now();
+                try {
+                    const { data, error, status } = await supabaseClient
+                        .from('products')
+                        .select('id, name, description, price, category_id, image_url, is_available, created_at')
+                        .order('name', { ascending: true });
+                    
+                    const endTime = performance.now();
+                    const duration = endTime - startTime;
+                    
+                    results.push({
+                        iteration: i + 1,
+                        success: !error,
+                        status,
+                        duration: `${duration.toFixed(2)}ms`,
+                        dataCount: data ? data.length : 0,
+                        error: error ? error.message : null
+                    });
+                } catch (err) {
+                    results.push({
+                        iteration: i + 1,
+                        success: false,
+                        error: err.message
+                    });
+                }
+            }
+            
+            const avgDuration = results
+                .filter(r => r.success)
+                .map(r => parseFloat(r.duration))
+                .reduce((a, b) => a + b, 0) / results.filter(r => r.success).length;
+            
+            displayResult('result7', {
+                iterations: results,
+                averageDuration: avgDuration ? `${avgDuration.toFixed(2)}ms` : 'N/A',
+                successRate: `${(results.filter(r => r.success).length / iterations * 100).toFixed(1)}%`
+            });
+        }
+
+        // Auto-save credentials
+        document.getElementById('supabaseUrl').addEventListener('change', function() {
+            localStorage.setItem('test_supabase_url', this.value);
+        });
+        
+        document.getElementById('supabaseKey').addEventListener('change', function() {
+            localStorage.setItem('test_supabase_key', this.value);
+        });
+    </script>
+</body>
+</html>

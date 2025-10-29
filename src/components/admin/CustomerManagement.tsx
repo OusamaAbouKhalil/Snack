@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Users, Star, Plus, Search, Gift, Edit, Trash2, X, Save } from 'lucide-react';
 import { useCustomers } from '../../hooks/useCustomers';
 
@@ -16,9 +16,13 @@ export function CustomerManagement() {
     loyalty_points: 0
   });
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+  // Memoize filtered customers to avoid recalculation on every render
+  const filteredCustomers = useMemo(() => 
+    customers.filter(customer =>
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+    ),
+    [customers, searchTerm]
   );
 
   const handleSubmit = async (e: React.FormEvent) => {

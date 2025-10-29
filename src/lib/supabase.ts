@@ -3,7 +3,39 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = 'https://dmxkiuzfasdwxsigyizy.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRteGtpdXpmYXNkd3hzaWd5aXp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyMDYzMDIsImV4cCI6MjA2NDc4MjMwMn0.IodAc1MndObssiRE-mWqukrLshMbT4UoHAkryYI7Fuk';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create Supabase client with custom fetch to handle QUIC protocol errors
+// QUIC (HTTP/3) errors can occur when browser tries to use QUIC but connection fails
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    fetch: async (url, options = {}) => {
+      const customOptions: RequestInit = {
+        ...options,
+        // Disable cache to force fresh requests
+        cache: 'no-store',
+        credentials: 'omit',
+      };
+      
+      try {
+        return await fetch(url, customOptions);
+      } catch (error: any) {
+        // If QUIC error, log it for debugging
+        if (error.message?.includes('QUIC') || error.name === 'TypeError') {
+          console.warn('Network fetch error (may be QUIC related):', error.message);
+          // Rethrow to let the retry logic in useProducts handle it
+        }
+        throw error;
+      }
+    },
+  },
+  db: {
+    schema: 'public',
+  },
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+});
 
 export type Database = {
   public: {

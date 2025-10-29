@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Calendar, Filter, Eye, Download, Check, X, Clock } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Search, Calendar, Eye, Download, Check, X, Clock } from 'lucide-react';
 import { useOrderHistory } from '../../hooks/useOrderHistory';
 import { OrderDetailsModal } from './OrderDetailsModal';
 import * as XLSX from 'xlsx';
@@ -10,15 +10,18 @@ export function OrderHistory() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
-      order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer_name.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  // Memoize filtered orders to avoid recalculation on every render
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      const matchesSearch = 
+        order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customer_name.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [orders, searchTerm, statusFilter]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

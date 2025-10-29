@@ -64,21 +64,19 @@ export function useSettings() {
       setLoading(true);
       setError(null);
 
-      // Convert settings object to array of key-value pairs for upsert
+      // Convert settings object to array of key-value pairs for batch upsert
       const updates = Object.entries(newSettings).map(([key, value]) => ({
         key,
         value: value.toString(),
         updated_at: new Date().toISOString()
       }));
 
-      // Upsert each setting
-      for (const update of updates) {
-        const { error } = await supabase
-          .from('settings')
-          .upsert(update, { onConflict: 'key' });
+      // Batch upsert all settings at once instead of sequential
+      const { error } = await supabase
+        .from('settings')
+        .upsert(updates, { onConflict: 'key' });
 
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       // Update local state
       setSettings(prev => prev ? { ...prev, ...newSettings } : null);

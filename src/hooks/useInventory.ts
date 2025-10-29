@@ -71,13 +71,7 @@ export function useInventory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchInventory();
-    fetchTransactions();
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
+  const fetchCategories = async (): Promise<void> => {
     try {
       const { data, error } = await supabase
         .from('ingredient_categories')
@@ -88,14 +82,12 @@ export function useInventory() {
       setCategories(data || []);
     } catch (err) {
       console.error('Error fetching categories:', err);
+      throw err;
     }
   };
 
-  const fetchInventory = async () => {
+  const fetchInventory = async (): Promise<void> => {
     try {
-      setLoading(true);
-      setError(null);
-
       const { data, error: fetchError } = await supabase
         .from('inventory')
         .select(`
@@ -128,12 +120,11 @@ export function useInventory() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch inventory');
       console.error('Error fetching inventory:', err);
-    } finally {
-      setLoading(false);
+      throw err;
     }
   };
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = async (): Promise<void> => {
     try {
       const { data, error } = await supabase
         .from('inventory_transactions')
@@ -172,13 +163,37 @@ export function useInventory() {
     } catch (err) {
       console.error('Error fetching transactions:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch transactions');
+      throw err;
     }
   };
+
+  // Fetch all data in parallel for faster loading
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        await Promise.all([
+          fetchInventory(),
+          fetchTransactions(),
+          fetchCategories()
+        ]);
+      } catch (err) {
+        console.error('Error in parallel fetch:', err);
+        setError('Failed to load inventory data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateStock = async (ingredientId: string, newStock: number, transactionType: 'ADD' | 'REMOVE' | 'ADJUST'): Promise<boolean> => {
     try {
       setError(null);
 
+      // Get current stock first (needed to calculate change)
       const { data: currentData } = await supabase
         .from('inventory')
         .select('stock_quantity')
@@ -191,28 +206,33 @@ export function useInventory() {
         ? currentData.stock_quantity - newStock
         : newStock - currentData.stock_quantity;
 
-      const { error: updateError } = await supabase
-        .from('inventory')
-        .update({ 
-          stock_quantity: newStock,
-          last_updated: new Date().toISOString()
-        })
-        .eq('ingredient_id', ingredientId);
+      const timestamp = new Date().toISOString();
+      const transactionId = uuidv4();
 
-      if (updateError) throw updateError;
+      // Update inventory and insert transaction in parallel
+      const [updateResult, transactionResult] = await Promise.all([
+        supabase
+          .from('inventory')
+          .update({ 
+            stock_quantity: newStock,
+            last_updated: timestamp
+          })
+          .eq('ingredient_id', ingredientId),
+        supabase
+          .from('inventory_transactions')
+          .insert({
+            id: transactionId,
+            ingredient_id: ingredientId,
+            quantity_change: quantityChange,
+            transaction_type: transactionType,
+            created_at: timestamp
+          })
+      ]);
 
-      const { error: transactionError } = await supabase
-        .from('inventory_transactions')
-        .insert({
-          id: uuidv4(),
-          ingredient_id: ingredientId,
-          quantity_change: quantityChange,
-          transaction_type: transactionType,
-          created_at: new Date().toISOString()
-        });
+      if (updateResult.error) throw updateResult.error;
+      if (transactionResult.error) throw transactionResult.error;
 
-      if (transactionError) throw transactionError;
-
+      // Update local state optimistically
       setInventory(prev => 
         prev.map(item => 
           item.ingredient_id === ingredientId 
@@ -221,7 +241,9 @@ export function useInventory() {
         )
       );
 
-      await fetchTransactions();
+      // Refetch transactions in background (don't await)
+      fetchTransactions().catch(err => console.error('Error refetching transactions:', err));
+      
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update stock');
@@ -261,6 +283,7 @@ export function useInventory() {
     try {
       setError(null);
 
+      // Validate category if provided (needs to happen first)
       if (ingredient.category_id) {
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         if (!uuidRegex.test(ingredient.category_id)) {
@@ -277,6 +300,9 @@ export function useInventory() {
       }
 
       const newIngredientId = uuidv4();
+      const timestamp = new Date().toISOString();
+
+      // Insert ingredient first (required for foreign keys)
       const { error: ingredientError } = await supabase
         .from('ingredients')
         .insert({
@@ -289,36 +315,49 @@ export function useInventory() {
 
       if (ingredientError) throw ingredientError;
 
-      const { error: inventoryError } = await supabase
-        .from('inventory')
-        .insert({
-          id: uuidv4(),
-          ingredient_id: newIngredientId,
-          stock_quantity: ingredient.stock_quantity,
-          min_stock_level: ingredient.min_stock_level,
-          unit: ingredient.unit,
-          last_updated: new Date().toISOString(),
-          submitted_at: new Date().toISOString()
-        });
-
-      if (inventoryError) throw inventoryError;
-
-      if (ingredient.stock_quantity > 0) {
-        const { error: transactionError } = await supabase
-          .from('inventory_transactions')
+      // Insert inventory and transaction in parallel (both depend on ingredient, but not on each other)
+      const inserts = [
+        supabase
+          .from('inventory')
           .insert({
             id: uuidv4(),
             ingredient_id: newIngredientId,
-            quantity_change: ingredient.stock_quantity,
-            transaction_type: 'ADD',
-            created_at: new Date().toISOString()
-          });
+            stock_quantity: ingredient.stock_quantity,
+            min_stock_level: ingredient.min_stock_level,
+            unit: ingredient.unit,
+            last_updated: timestamp,
+            submitted_at: timestamp
+          })
+      ];
 
-        if (transactionError) throw transactionError;
+      // Only add transaction if stock > 0
+      if (ingredient.stock_quantity > 0) {
+        inserts.push(
+          supabase
+            .from('inventory_transactions')
+            .insert({
+              id: uuidv4(),
+              ingredient_id: newIngredientId,
+              quantity_change: ingredient.stock_quantity,
+              transaction_type: 'ADD',
+              created_at: timestamp
+            })
+        );
       }
 
-      await fetchInventory();
-      await fetchTransactions();
+      // Execute inserts in parallel
+      const results = await Promise.all(inserts);
+      
+      // Check for errors
+      for (const result of results) {
+        if (result.error) throw result.error;
+      }
+
+      // Refetch in parallel for faster update (don't block on this)
+      Promise.all([fetchInventory(), fetchTransactions()]).catch(err => 
+        console.error('Error refetching after add:', err)
+      );
+      
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add ingredient');
@@ -331,26 +370,25 @@ export function useInventory() {
     try {
       setError(null);
 
-      const { error: inventoryError } = await supabase
-        .from('inventory')
-        .delete()
-        .eq('ingredient_id', ingredientId);
+      // Delete all related records in parallel for faster operation
+      const [inventoryResult, ingredientResult, transactionResult] = await Promise.all([
+        supabase
+          .from('inventory')
+          .delete()
+          .eq('ingredient_id', ingredientId),
+        supabase
+          .from('ingredients')
+          .delete()
+          .eq('id', ingredientId),
+        supabase
+          .from('inventory_transactions')
+          .delete()
+          .eq('ingredient_id', ingredientId)
+      ]);
 
-      if (inventoryError) throw inventoryError;
-
-      const { error: ingredientError } = await supabase
-        .from('ingredients')
-        .delete()
-        .eq('id', ingredientId);
-
-      if (ingredientError) throw ingredientError;
-
-      const { error: transactionError } = await supabase
-        .from('inventory_transactions')
-        .delete()
-        .eq('ingredient_id', ingredientId);
-
-      if (transactionError) throw transactionError;
+      if (inventoryResult.error) throw inventoryResult.error;
+      if (ingredientResult.error) throw ingredientResult.error;
+      if (transactionResult.error) throw transactionResult.error;
 
       setInventory(prev => prev.filter(item => item.ingredient_id !== ingredientId));
       setTransactions(prev => prev.filter(t => t.ingredient_id !== ingredientId));

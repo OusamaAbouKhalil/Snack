@@ -67,7 +67,7 @@ export function SettingsPanel() {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+      <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg flex items-center gap-2 transition-colors duration-300">
         <AlertCircle size={20} />
         Error: {error}
       </div>
@@ -77,54 +77,54 @@ export function SettingsPanel() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600 mt-1">Configure your store settings and preferences</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-300">Settings</h1>
+        <p className="text-gray-600 dark:text-gray-300 mt-1 transition-colors duration-300">Configure your store settings and preferences</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Store Information */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-300">
           <div className="flex items-center gap-3 mb-6">
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <Store className="text-blue-600" size={20} />
+            <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-lg transition-colors duration-300">
+              <Store className="text-blue-600 dark:text-blue-400" size={20} />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Store Information</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300">Store Information</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
                 Store Name
               </label>
               <input
                 type="text"
                 value={formData.store_name}
                 onChange={(e) => setFormData({ ...formData, store_name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
                 Phone Number
               </label>
               <input
                 type="tel"
                 value={formData.store_phone}
                 onChange={(e) => setFormData({ ...formData, store_phone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
                 Store Address
               </label>
               <textarea
                 value={formData.store_address}
                 onChange={(e) => setFormData({ ...formData, store_address: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
                 rows={3}
               />
             </div>
@@ -132,17 +132,17 @@ export function SettingsPanel() {
         </div>
 
         {/* Financial Settings */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-300">
           <div className="flex items-center gap-3 mb-6">
-            <div className="bg-green-100 p-2 rounded-lg">
-              <DollarSign className="text-green-600" size={20} />
+            <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-lg transition-colors duration-300">
+              <DollarSign className="text-green-600 dark:text-green-400" size={20} />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Financial Settings</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300">Financial Settings</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
                 Tax Rate (%)
               </label>
               <div className="relative">
@@ -153,21 +153,21 @@ export function SettingsPanel() {
                   max="100"
                   value={formData.tax_rate}
                   onChange={(e) => setFormData({ ...formData, tax_rate: e.target.value })}
-                  className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
                   required
                 />
-                <Percent className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                <Percent className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={16} />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
                 Primary Currency
               </label>
               <select
                 value={formData.currency}
                 onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
               >
                 <option value="USD">USD ($)</option>
                 <option value="EUR">EUR (€)</option>
@@ -178,7 +178,7 @@ export function SettingsPanel() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
                 USD to LBP Rate
               </label>
               <div className="relative">
@@ -187,16 +187,16 @@ export function SettingsPanel() {
                   min="0"
                   value={formData.usd_to_lbp_rate}
                   onChange={(e) => setFormData({ ...formData, usd_to_lbp_rate: e.target.value })}
-                  className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
                   required
                 />
-                <TrendingUp className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                <TrendingUp className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={16} />
               </div>
-              <p className="text-xs text-gray-500 mt-1">Exchange rate for dual currency display</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-300">Exchange rate for dual currency display</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
                 Loyalty Points Rate
               </label>
               <input
@@ -205,26 +205,26 @@ export function SettingsPanel() {
                 min="0"
                 value={formData.loyalty_points_rate}
                 onChange={(e) => setFormData({ ...formData, loyalty_points_rate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">Points per dollar spent</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-300">Points per dollar spent</p>
             </div>
           </div>
         </div>
 
         {/* Inventory Settings */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-300">
           <div className="flex items-center gap-3 mb-6">
-            <div className="bg-yellow-100 p-2 rounded-lg">
-              <Bell className="text-yellow-600" size={20} />
+            <div className="bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-lg transition-colors duration-300">
+              <Bell className="text-yellow-600 dark:text-yellow-400" size={20} />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Inventory Settings</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300">Inventory Settings</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
                 Low Stock Threshold
               </label>
               <input
@@ -232,10 +232,10 @@ export function SettingsPanel() {
                 min="0"
                 value={formData.low_stock_threshold}
                 onChange={(e) => setFormData({ ...formData, low_stock_threshold: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">Alert when stock falls below this number</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-300">Alert when stock falls below this number</p>
             </div>
           </div>
         </div>
@@ -245,7 +245,7 @@ export function SettingsPanel() {
           <button
             type="submit"
             disabled={saving}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save size={20} />
             {saving ? 'Saving...' : 'Save Settings'}

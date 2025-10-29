@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, Edit, Trash2, Search, Package, Upload, X } from 'lucide-react';
 import { useProducts } from '../../hooks/useProducts';
 import { useProductManagement } from '../../hooks/useProductManagement';
 import { Product } from '../../types';
 
 export function ProductManagement() {
-  const { products, categories, loading, refetch } = useProducts();
+  const { products, categories, loading, error, refetch } = useProducts();
   const { createProduct, updateProduct, deleteProduct, loading: actionLoading } = useProductManagement();
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -21,9 +21,13 @@ export function ProductManagement() {
     is_available: true
   });
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.description.toLowerCase().includes(searchTerm.toLowerCase())
+  // Memoize filtered products to avoid recalculation on every render
+  const filteredProducts = useMemo(() =>
+    products.filter(product =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    ),
+    [products, searchTerm]
   );
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,7 +67,10 @@ export function ProductManagement() {
 
     if (success) {
       resetForm();
-      refetch();
+      // Only refetch if we have products, otherwise they're loading anyway
+      if (products.length > 0) {
+        refetch();
+      }
     }
   };
 
@@ -84,7 +91,7 @@ export function ProductManagement() {
   const handleDelete = async (productId: string) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       const success = await deleteProduct(productId);
-      if (success) {
+      if (success && products.length > 0) {
         refetch();
       }
     }
@@ -105,16 +112,32 @@ export function ProductManagement() {
     });
   };
 
-  if (loading) {
+  // Only show full loading if we have no products at all
+  if (loading && products.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        <p className="text-gray-600 dark:text-gray-400">Loading products...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg flex items-center justify-between transition-colors duration-300">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">⚠️</span>
+            <span>{error}</span>
+          </div>
+          <button
+            onClick={() => refetch()}
+            className="bg-red-500 dark:bg-red-600 hover:bg-red-600 dark:hover:bg-red-700 text-white px-4 py-1 rounded text-sm transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Product Management</h1>

@@ -57,22 +57,24 @@ export function useOrderHistory(options: UseOrderHistoryOptions = {}) {
 
   const updateOrderStatus = async (orderId: string, status: string): Promise<boolean> => {
     try {
-      // Verify authentication status
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('Authenticated user:', user?.id || 'No user');
-
       if (status === 'cancelled') {
-        // Fetch order_items to verify and store them
-        const { data: items, error: checkError } = await supabase
-          .from('order_items')
-          .select('id, order_id, product_id, quantity, unit_price, total_price, created_at')
-          .eq('order_id', orderId);
+        // Fetch order_items and verify auth in parallel
+        const [itemsResult, authResult] = await Promise.all([
+          supabase
+            .from('order_items')
+            .select('id, order_id, product_id, quantity, unit_price, total_price, created_at')
+            .eq('order_id', orderId),
+          supabase.auth.getUser()
+        ]);
 
-        if (checkError) {
-          console.error('Error checking order_items:', checkError);
-          throw new Error(`Failed to check order_items: ${checkError.message}`);
+        console.log('Authenticated user:', authResult.data.user?.id || 'No user');
+
+        if (itemsResult.error) {
+          console.error('Error checking order_items:', itemsResult.error);
+          throw new Error(`Failed to check order_items: ${itemsResult.error.message}`);
         }
 
+        const items = itemsResult.data;
         console.log(`Found ${items?.length || 0} order_items for order ${orderId}:`, JSON.stringify(items, null, 2));
 
         // Store items before deletion
@@ -83,31 +85,31 @@ export function useOrderHistory(options: UseOrderHistoryOptions = {}) {
           }));
         }
 
-        // Update order status first to satisfy RLS policy
-        const { error: updateError } = await supabase
+        // Update order status first to satisfy RLS policy, then delete items
+        const updateResult = await supabase
           .from('orders')
           .update({ status })
           .eq('id', orderId);
 
-        if (updateError) {
-          console.error('Failed to update order status:', updateError);
-          throw new Error(`Failed to update order status: ${updateError.message}`);
+        if (updateResult.error) {
+          console.error('Failed to update order status:', updateResult.error);
+          throw new Error(`Failed to update order status: ${updateResult.error.message}`);
         }
 
         if (items && items.length > 0) {
-          // Delete order_items
-          const { error: deleteError, data: deletedItems } = await supabase
+          // Delete order_items after status update (they can run in parallel but order matters for RLS)
+          const deleteResult = await supabase
             .from('order_items')
             .delete()
             .eq('order_id', orderId)
             .select();
 
-          if (deleteError) {
-            console.error('Failed to delete order_items:', deleteError);
-            throw new Error(`Failed to delete order_items: ${deleteError.message}`);
+          if (deleteResult.error) {
+            console.error('Failed to delete order_items:', deleteResult.error);
+            throw new Error(`Failed to delete order_items: ${deleteResult.error.message}`);
           }
 
-          console.log(`Deleted ${deletedItems?.length || 0} order_items for order ${orderId}`);
+          console.log(`Deleted ${deleteResult.data?.length || 0} order_items for order ${orderId}`);
         } else {
           console.log(`No order_items found to delete for order ${orderId}`);
         }
@@ -118,14 +120,14 @@ export function useOrderHistory(options: UseOrderHistoryOptions = {}) {
         const itemsToRestore = deletedOrderItems[orderId];
 
         // Update order status
-        const { error: updateError } = await supabase
+        const updateResult = await supabase
           .from('orders')
           .update({ status })
           .eq('id', orderId);
 
-        if (updateError) {
-          console.error('Failed to update order status:', updateError);
-          throw new Error(`Failed to update order status: ${updateError.message}`);
+        if (updateResult.error) {
+          console.error('Failed to update order status:', updateResult.error);
+          throw new Error(`Failed to update order status: ${updateResult.error.message}`);
         }
 
         // If changing from cancelled and items exist, restore them with new IDs and timestamps
@@ -136,17 +138,17 @@ export function useOrderHistory(options: UseOrderHistoryOptions = {}) {
             // Omit id to generate new UUIDs
           }));
 
-          const { error: insertError, data: insertedItems } = await supabase
+          const insertResult = await supabase
             .from('order_items')
             .insert(itemsToInsert)
             .select();
 
-          if (insertError) {
-            console.error('Failed to reinsert order_items:', insertError);
-            throw new Error(`Failed to reinsert order_items: ${insertError.message}`);
+          if (insertResult.error) {
+            console.error('Failed to reinsert order_items:', insertResult.error);
+            throw new Error(`Failed to reinsert order_items: ${insertResult.error.message}`);
           }
 
-          console.log(`Reinserted ${insertedItems?.length || 0} order_items for order ${orderId}`, JSON.stringify(insertedItems, null, 2));
+          console.log(`Reinserted ${insertResult.data?.length || 0} order_items for order ${orderId}`, JSON.stringify(insertResult.data, null, 2));
 
           // Clear stored items
           setDeletedOrderItems(prev => {
@@ -157,7 +159,7 @@ export function useOrderHistory(options: UseOrderHistoryOptions = {}) {
         }
       }
 
-      // Update local state
+      // Update local state optimistically
       setOrders(prev => 
         prev.map(order => 
           order.id === orderId 

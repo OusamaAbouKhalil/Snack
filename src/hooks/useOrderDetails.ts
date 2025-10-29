@@ -25,31 +25,30 @@ export function useOrderDetails(orderId: string) {
     try {
       setLoading(true);
 
-      // Fetch order
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', orderId)
-        .single();
+      // Fetch order and items in parallel for faster loading
+      const [orderResult, itemsResult] = await Promise.all([
+        supabase
+          .from('orders')
+          .select('*')
+          .eq('id', orderId)
+          .single(),
+        supabase
+          .from('order_items')
+          .select(`
+            id,
+            quantity,
+            unit_price,
+            total_price,
+            products (name)
+          `)
+          .eq('order_id', orderId)
+      ]);
 
-      if (orderError) throw orderError;
+      if (orderResult.error) throw orderResult.error;
+      if (itemsResult.error) throw itemsResult.error;
 
-      // Fetch order items with product names
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('order_items')
-        .select(`
-          id,
-          quantity,
-          unit_price,
-          total_price,
-          products (name)
-        `)
-        .eq('order_id', orderId);
-
-      if (itemsError) throw itemsError;
-
-      setOrder(orderData);
-      setItems(itemsData?.map(item => ({
+      setOrder(orderResult.data);
+      setItems(itemsResult.data?.map(item => ({
         id: item.id,
         product_name: (item.products as any)?.name || 'Unknown Product',
         quantity: item.quantity,
