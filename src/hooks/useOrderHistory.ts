@@ -12,27 +12,42 @@ interface OrderItem {
   created_at: string;
 }
 
-export function useOrderHistory() {
+interface UseOrderHistoryOptions {
+  limit?: number;
+  offset?: number;
+}
+
+export function useOrderHistory(options: UseOrderHistoryOptions = {}) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletedOrderItems, setDeletedOrderItems] = useState<{ [orderId: string]: OrderItem[] }>({});
+  const [hasMore, setHasMore] = useState(true);
+  
+  const { limit = 100, offset = 0 } = options;
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [limit, offset]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
       
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from('orders')
-        .select('*')
+        .select('id, order_number, customer_name, total_amount, payment_method, status, created_at', { count: 'exact' })
         .order('created_at', { ascending: false });
+      
+      if (limit > 0) {
+        query = query.range(offset, offset + limit - 1);
+      }
+
+      const { data, error: fetchError, count } = await query;
 
       if (fetchError) throw fetchError;
       setOrders(data || []);
+      setHasMore(count ? (offset + limit) < count : false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch orders');
     } finally {
@@ -159,5 +174,5 @@ export function useOrderHistory() {
     }
   };
 
-  return { orders, loading, error, updateOrderStatus, refetch: fetchOrders };
+  return { orders, loading, error, updateOrderStatus, refetch: fetchOrders, hasMore };
 }

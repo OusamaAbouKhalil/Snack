@@ -36,9 +36,9 @@ export function Dashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="bg-white rounded-xl shadow-sm p-8 max-w-md w-full">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Enter Dashboard Code</h1>
+      <div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-8 max-w-md w-full transition-colors duration-300">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">Enter Dashboard Code</h1>
           <form onSubmit={handleCodeSubmit} className="space-y-4">
             <div>
               <input
@@ -46,15 +46,15 @@ export function Dashboard() {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="Enter access code"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
               />
               {codeError && (
-                <p className="text-red-600 text-sm mt-2">{codeError}</p>
+                <p className="text-red-600 dark:text-red-400 text-sm mt-2">{codeError}</p>
               )}
             </div>
             <button
               type="submit"
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+              className="w-full bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
             >
               Submit
             </button>
@@ -257,19 +257,19 @@ export function Dashboard() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-          <p className="text-gray-600">Welcome back! Here's what's happening at your store today.</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Dashboard</h1>
+          <p className="text-gray-600 dark:text-gray-300">Welcome back! Here's what's happening at your store today.</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <label htmlFor="daysFilter" className="text-sm font-medium text-gray-700">
+            <label htmlFor="daysFilter" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Show last:
             </label>
             <select
               id="daysFilter"
               value={selectedDays}
               onChange={handleDaysChange}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
             >
               <option value="7">7 Days</option>
               <option value="14">14 Days</option>
@@ -278,7 +278,7 @@ export function Dashboard() {
           </div>
           <button
             onClick={() => refetch()}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+            className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
           >
             <RefreshCw size={16} />
             Refresh
@@ -291,19 +291,19 @@ export function Dashboard() {
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div key={index} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div key={index} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{stat.title}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{stat.value}</p>
                 </div>
                 <div className={`${stat.color} p-3 rounded-lg`}>
                   <Icon className="text-white" size={24} />
                 </div>
               </div>
               <div className="mt-4">
-                <span className="text-sm text-green-600 font-medium">{stat.change}</span>
-                <span className="text-sm text-gray-500 ml-1">from yesterday</span>
+                <span className="text-sm text-green-600 dark:text-green-400 font-medium">{stat.change}</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">from yesterday</span>
               </div>
             </div>
           );
@@ -312,20 +312,20 @@ export function Dashboard() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Items Ordered Trend</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Items Ordered Trend</h3>
           <div className="h-80">
             <Line data={lineChartDataItems} options={lineChartOptionsItems} />
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Daily Sales Trend</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Daily Sales Trend</h3>
           <div className="h-80">
             <Line data={lineChartDataSales} options={lineChartOptionsSales} />
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Products Sales</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Top Products Sales</h3>
           <div className="h-80">
             <Bar data={barChartData} options={barChartOptions} />
           </div>
@@ -335,19 +335,19 @@ export function Dashboard() {
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Orders */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Orders</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Recent Orders</h3>
           <div className="space-y-4">
             {stats.recentOrders.length > 0 ? (
               stats.recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300">
                   <div>
-                    <p className="font-medium text-gray-900">#{order.order_number}</p>
-                    <p className="text-sm text-gray-600">{order.customer_name || 'Walk-in Customer'}</p>
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${
-                      order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
+                    <p className="font-medium text-gray-900 dark:text-gray-100">#{order.order_number}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{order.customer_name || 'Walk-in Customer'}</p>
+                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 transition-colors duration-300 ${
+                      order.status === 'completed' ? 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300' :
+                      order.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300' :
+                      'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300'
                     }`}>
                       {order.status}
                     </span>

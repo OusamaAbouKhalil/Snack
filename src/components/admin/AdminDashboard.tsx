@@ -10,6 +10,7 @@ import { SettingsPanel } from './SettingsPanel';
 import { SalesReports } from './SalesReports';
 import { AdminUserManagement } from './AdminUserManagement';
 import { OrderManagement } from './OrderManagement';
+import { ThemeToggle } from '../ThemeToggle';
 
 interface AdminDashboardProps {
   onClose: () => void;
@@ -61,26 +62,27 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex transition-colors duration-300">
       {/* Sidebar */}
-      <div className={`${collapsed ? 'w-20' : 'w-64'} bg-white shadow-lg transition-all duration-300`}>
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          {!collapsed && <h2 className="text-lg font-bold text-gray-800">Admin Panel</h2>}
+      <div className={`${collapsed ? 'w-20' : 'w-64'} bg-white dark:bg-gray-800 shadow-lg transition-all duration-300`}>
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          {!collapsed && <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">Admin Panel</h2>}
           <div className="flex gap-2">
+            <ThemeToggle />
             <button
               onClick={() => setCollapsed(!collapsed)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+              {collapsed ? <ChevronRight size={20} className="text-gray-600 dark:text-gray-300" /> : <ChevronLeft size={20} className="text-gray-600 dark:text-gray-300" />}
             </button>
             {!collapsed && (
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 title="Back to Main Site"
               >
-                <Home size={20} />
+                <Home size={20} className="text-gray-600 dark:text-gray-300" />
               </button>
             )}
           </div>
@@ -96,8 +98,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     onClick={() => setActiveView(item.id as AdminView)}
                     className={`w-full flex items-center rounded-lg px-4 py-3 transition-colors 
                       ${activeView === item.id 
-                        ? 'bg-primary-100 text-primary-700 font-medium' 
-                        : 'text-gray-600 hover:bg-gray-100'}`}
+                        ? 'bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 font-medium' 
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                   >
                     <Icon size={20} />
                     {!collapsed && <span className="ml-3">{item.label}</span>}
@@ -110,7 +112,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
         <div className="p-8">
           {renderContent()}
         </div>

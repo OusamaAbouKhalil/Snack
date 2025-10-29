@@ -501,70 +501,70 @@ export function InventoryManagement() {
       </div>
 
       {/* Inventory Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Ingredient Inventory</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-300">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Ingredient Inventory</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full table-auto">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleInventorySort('name')}
                 >
                   Ingredient <ArrowUpDown size={14} className="inline ml-1" />
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleInventorySort('category_name')}
                 >
                   Category <ArrowUpDown size={14} className="inline ml-1" />
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleInventorySort('unit')}
                 >
                   Unit <ArrowUpDown size={14} className="inline ml-1" />
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleInventorySort('stock_quantity')}
                 >
                   Current Stock <ArrowUpDown size={14} className="inline ml-1" />
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleInventorySort('min_stock_level')}
                 >
                   Min Level <ArrowUpDown size={14} className="inline ml-1" />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {paginatedInventory.map((item) => {
                 const status = getStockStatus(item.stock_quantity, item.min_stock_level);
                 return (
-                  <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                          <Package className="text-orange-600" size={20} />
+                        <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/50 rounded-lg flex items-center justify-center">
+                          <Package className="text-orange-600 dark:text-orange-400" size={20} />
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">{item.name}</div>
-                          <div className="text-sm text-gray-500">{item.description}</div>
+                          <div className="font-medium text-gray-900 dark:text-gray-100">{item.name}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{item.description}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-900">{item.category_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-900">{item.unit}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">{item.category_name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">{item.unit}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {editingItem === item.ingredient_id ? (
                         <div className="flex items-center gap-2">
@@ -572,7 +572,7 @@ export function InventoryManagement() {
                             type="number"
                             value={newStock}
                             onChange={(e) => setNewStock(e.target.value)}
-                            className="w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:border-orange-500 focus:ring-orange-500"
+                            className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm focus:border-orange-500 dark:focus:border-orange-600 focus:ring-orange-500 dark:focus:ring-orange-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
                             min="0"
                           />
                           <button

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Plus,
   Search,
@@ -18,7 +18,7 @@ import { CartItem } from "../../types";
 
 export function OrderManagement() {
   const { orders, loading, updateOrderStatus, refetch } = useOrderHistory();
-  const { products } = useProducts();
+  const { products, categories, loading: productsLoading, refetch: refetchProducts } = useProducts();
   const { createOrder, loading: orderLoading } = useOrders();
   const { settings } = useSettings();
 
@@ -28,23 +28,52 @@ export function OrderManagement() {
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [searchTerm, setSearchTerm] = useState("");
   const [productSearch, setProductSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   const EXCHANGE_RATE = 90000;
 
-  const pendingOrders = orders.filter((order) => order.status === "pending");
-  const filteredOrders = orders.filter(
-    (order) =>
-      order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer_name.toLowerCase().includes(searchTerm.toLowerCase())
+  // Memoize filtered data to avoid recalculation on every render
+  const pendingOrders = useMemo(() => 
+    orders.filter((order) => order.status === "pending"),
+    [orders]
+  );
+  
+  const filteredOrders = useMemo(() =>
+    orders.filter(
+      (order) =>
+        order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customer_name.toLowerCase().includes(searchTerm.toLowerCase())
+    ),
+    [orders, searchTerm]
   );
 
-  const filteredProducts = products
-    .filter(
-      (p) =>
-        p.is_available &&
-        p.name.toLowerCase().includes(productSearch.toLowerCase())
-    )
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const filteredProducts = useMemo(() =>
+    products
+      .filter((p) => {
+        const matchesSearch = p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+                             p.description?.toLowerCase().includes(productSearch.toLowerCase());
+        const matchesCategory = selectedCategory === "all" || p.category_id === selectedCategory;
+        return p.is_available && matchesSearch && matchesCategory;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    [products, productSearch, selectedCategory]
+  );
+
+  // Refetch products when modal opens to ensure latest products are shown
+  const handleOpenCreateOrder = () => {
+    refetchProducts();
+    setShowCreateOrder(true);
+  };
+
+  // Handle closing the modal and resetting filters
+  const handleCloseCreateOrder = () => {
+    setShowCreateOrder(false);
+    setCartItems([]);
+    setCustomerName("");
+    setPaymentMethod("cash");
+    setProductSearch("");
+    setSelectedCategory("all");
+  };
 
   const formatCurrency = (amount: number) => {
     const usd = amount.toFixed(2);
@@ -97,8 +126,9 @@ export function OrderManagement() {
       setCartItems([]);
       setCustomerName("");
       setPaymentMethod("cash");
-      setShowCreateOrder(false);
       setProductSearch("");
+      setSelectedCategory("all");
+      setShowCreateOrder(false);
       refetch();
 
       // Print invoice
@@ -299,19 +329,19 @@ export function OrderManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Order Management</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Order Management</h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-1">
             Create new orders and manage existing ones
           </p>
           {pendingOrders.length > 0 && (
-            <div className="mt-2 flex items-center gap-2 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium w-fit">
+            <div className="mt-2 flex items-center gap-2 bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300 px-3 py-1 rounded-full text-sm font-medium w-fit">
               <Clock size={16} />
               {pendingOrders.length} pending orders
             </div>
           )}
         </div>
         <button
-          onClick={() => setShowCreateOrder(true)}
+          onClick={handleOpenCreateOrder}
           className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
           <Plus size={20} />
@@ -320,10 +350,10 @@ export function OrderManagement() {
       </div>
 
       {/* Search */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-300">
         <div className="relative">
           <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
             size={20}
           />
           <input
@@ -331,56 +361,56 @@ export function OrderManagement() {
             placeholder="Search orders..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
           />
         </div>
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Orders</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Recent Orders</h2>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Order
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Customer
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Total
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredOrders.slice(0, 10).map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50">
+                <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">
+                    <div className="font-medium text-gray-900 dark:text-gray-100">
                       #{order.order_number}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                       {new Date(order.created_at).toLocaleDateString()}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-gray-900">
+                    <div className="text-gray-900 dark:text-gray-100">
                       {order.customer_name || "Walk-in Customer"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-semibold text-gray-900">
+                    <div className="font-semibold text-gray-900 dark:text-gray-100">
                       {formatCurrency(order.total_amount)}
                     </div>
                   </td>
@@ -392,11 +422,11 @@ export function OrderManagement() {
                       }
                       className={`px-2 py-1 rounded-full text-xs font-medium border-0 ${
                         order.status === "completed"
-                          ? "bg-green-100 text-green-800"
+                          ? "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300"
                           : order.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
+                          ? "bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300"
+                          : "bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300"
+                      } transition-colors duration-300`}
                     >
                       <option value="pending">Pending</option>
                       <option value="completed">Completed</option>
@@ -411,7 +441,7 @@ export function OrderManagement() {
                             onClick={() =>
                               updateOrderStatus(order.id, "completed")
                             }
-                            className="text-green-600 hover:text-green-900 p-1"
+                            className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 p-1 transition-colors duration-200"
                             title="Mark as Completed"
                           >
                             <Check size={16} />
@@ -420,7 +450,7 @@ export function OrderManagement() {
                             onClick={() =>
                               updateOrderStatus(order.id, "cancelled")
                             }
-                            className="text-red-600 hover:text-red-900 p-1"
+                            className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-1 transition-colors duration-200"
                             title="Cancel Order"
                           >
                             <X size={16} />
@@ -438,16 +468,16 @@ export function OrderManagement() {
 
       {/* Create Order Modal */}
       {showCreateOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden transition-colors duration-300">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                   Create New Order
                 </h2>
                 <button
-                  onClick={() => setShowCreateOrder(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  onClick={handleCloseCreateOrder}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-300"
                 >
                   <X size={20} />
                 </button>
@@ -458,12 +488,14 @@ export function OrderManagement() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Product Selection */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                     Select Products
                   </h3>
-                  <div className="mb-4 relative">
+                  
+                  {/* Search Bar */}
+                  <div className="mb-3 relative">
                     <Search
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
                       size={20}
                     />
                     <input
@@ -471,56 +503,107 @@ export function OrderManagement() {
                       placeholder="Search products..."
                       value={productSearch}
                       onChange={(e) => setProductSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
                     />
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-                    {filteredProducts.map((product) => (
-                      <div
-                        key={product.id}
-                        className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:shadow-md transition-shadow cursor-pointer hover:bg-orange-50"
-                        onClick={() => addToCart(product.id)}
+
+                  {/* Category Filter */}
+                  <div className="mb-4">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => setSelectedCategory("all")}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                          selectedCategory === "all"
+                            ? "bg-orange-500 dark:bg-orange-600 text-white"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                        }`}
                       >
-                        <div className="font-medium text-gray-900 mb-2">
-                          {product.name}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {formatCurrency(product.price)}
-                        </div>
-                      </div>
-                    ))}
+                        All
+                      </button>
+                      {categories.map((category) => (
+                        <button
+                          key={category.id}
+                          onClick={() => setSelectedCategory(category.id)}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                            selectedCategory === category.id
+                              ? "bg-orange-500 dark:bg-orange-600 text-white"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                          }`}
+                        >
+                          {category.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
+
+                  {/* Products List */}
+                  {productsLoading ? (
+                    <div className="flex items-center justify-center h-64">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                    </div>
+                  ) : filteredProducts.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                      <p>No products found</p>
+                      <p className="text-sm mt-1">Try adjusting your search or category filter</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+                      {filteredProducts.map((product) => (
+                        <div
+                          key={product.id}
+                          className="border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-700 hover:shadow-md transition-all cursor-pointer hover:bg-orange-50 dark:hover:bg-gray-600 hover:border-orange-300 dark:hover:border-orange-600 flex items-center justify-between"
+                          onClick={() => addToCart(product.id)}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900 dark:text-gray-100 mb-1 truncate">
+                              {product.name}
+                            </div>
+                            {product.description && (
+                              <div className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
+                                {product.description}
+                              </div>
+                            )}
+                          </div>
+                          <div className="ml-3 text-right">
+                            <div className="font-semibold text-orange-600 dark:text-orange-400 text-sm whitespace-nowrap">
+                              {formatCurrency(product.price)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Order Summary */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                     Order Summary
                   </h3>
 
                   {/* Customer Info */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Customer Name
                     </label>
                     <input
                       type="text"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
                       placeholder="Enter customer name"
                     />
                   </div>
 
                   {/* Payment Method */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Payment Method
                     </label>
                     <select
                       value={paymentMethod}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
                     >
                       <option value="cash">Cash</option>
                       <option value="card">Card</option>
@@ -532,13 +615,13 @@ export function OrderManagement() {
                     {cartItems.map((item) => (
                       <div
                         key={item.product.id}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                        className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded"
                       >
                         <div>
-                          <div className="font-medium text-sm">
+                          <div className="font-medium text-sm text-gray-900 dark:text-gray-100">
                             {item.product.name}
                           </div>
-                          <div className="text-xs text-gray-600">
+                          <div className="text-xs text-gray-600 dark:text-gray-400">
                             {formatCurrency(item.product.price)} each
                           </div>
                         </div>
@@ -547,18 +630,18 @@ export function OrderManagement() {
                             onClick={() =>
                               updateQuantity(item.product.id, item.quantity - 1)
                             }
-                            className="bg-gray-200 hover:bg-gray-300 w-6 h-6 rounded flex items-center justify-center text-sm"
+                            className="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 w-6 h-6 rounded flex items-center justify-center text-sm text-gray-900 dark:text-gray-100 transition-colors duration-200"
                           >
                             -
                           </button>
-                          <span className="w-8 text-center text-sm">
+                          <span className="w-8 text-center text-sm text-gray-900 dark:text-gray-100">
                             {item.quantity}
                           </span>
                           <button
                             onClick={() =>
                               updateQuantity(item.product.id, item.quantity + 1)
                             }
-                            className="bg-gray-200 hover:bg-gray-300 w-6 h-6 rounded flex items-center justify-center text-sm"
+                            className="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 w-6 h-6 rounded flex items-center justify-center text-sm text-gray-900 dark:text-gray-100 transition-colors duration-200"
                           >
                             +
                           </button>
@@ -568,12 +651,12 @@ export function OrderManagement() {
                   </div>
 
                   {/* Total */}
-                  <div className="border-t border-gray-200 pt-4">
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <div className="flex justify-between items-center mb-4">
-                      <span className="text-lg font-semibold text-gray-900">
+                      <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         Total:
                       </span>
-                      <span className="text-xl font-bold text-orange-600 whitespace-nowrap">
+                      <span className="text-xl font-bold text-orange-600 dark:text-orange-400 whitespace-nowrap">
                         {formatCurrency(total)}
                       </span>
                     </div>

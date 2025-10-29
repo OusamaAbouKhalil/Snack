@@ -39,6 +39,49 @@ export function useSalesReports(startDate: string, endDate: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Chunk size for batching queries to avoid URL length limits
+  // With UUIDs (36 chars each), 50 items = ~2000+ chars in URL, which is safe
+  const BATCH_CHUNK_SIZE = 50;
+
+  // Helper function to batch array operations
+  const chunkArray = <T,>(array: T[], chunkSize: number): T[][] => {
+    const chunks: T[][] = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+      chunks.push(array.slice(i, i + chunkSize));
+    }
+    return chunks;
+  };
+
+  // Helper function to batch query with .in()
+  const batchQuery = async <T,>(
+    table: string,
+    select: string,
+    column: string,
+    values: string[],
+    chunkSize: number = BATCH_CHUNK_SIZE
+  ): Promise<T[]> => {
+    if (!values || values.length === 0) {
+      return [];
+    }
+
+    const chunks = chunkArray(values, chunkSize);
+    const allResults: T[] = [];
+
+    for (const chunk of chunks) {
+      const { data, error } = await supabase
+        .from(table)
+        .select(select)
+        .in(column, chunk);
+
+      if (error) throw error;
+      if (data && Array.isArray(data)) {
+        allResults.push(...(data as T[]));
+      }
+    }
+
+    return allResults;
+  };
+
   const fetchReports = async () => {
     try {
       setLoading(true);
@@ -54,51 +97,69 @@ export function useSalesReports(startDate: string, endDate: string) {
 
       if (ordersError) throw ordersError;
 
-      const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
-      const totalOrders = ordersData?.length || 0;
+      if (!ordersData || ordersData.length === 0) {
+        setReports({
+          totalRevenue: 0,
+          totalOrders: 0,
+          averageOrderValue: 0,
+          totalItemsSold: 0,
+          topProducts: [],
+          salesByCategory: [],
+          dailySales: []
+        });
+        return;
+      }
+
+      const orderIds = ordersData.map(o => o.id);
+      const totalRevenue = ordersData.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+      const totalOrders = ordersData.length;
       const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-      // Total items sold
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('order_items')
-        .select('quantity, order_id')
-        .in('order_id', ordersData?.map(o => o.id) || []);
+      // Total items sold - using batch query
+      const itemsData = await batchQuery<{ quantity: number; order_id: string }>(
+        'order_items',
+        'quantity, order_id',
+        'order_id',
+        orderIds
+      );
 
-      if (itemsError) throw itemsError;
+      const totalItemsSold = itemsData.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
-      const totalItemsSold = itemsData?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
+      // Top products - using batch query
+      const topProductsData = await batchQuery<{ product_id: string; quantity: number; total_price: number }>(
+        'order_items',
+        'product_id, quantity, total_price',
+        'order_id',
+        orderIds
+      );
 
-      // Top products
-      const { data: topProductsData, error: topProductsError } = await supabase
-        .from('order_items')
-        .select('product_id, quantity, total_price')
-        .in('order_id', ordersData?.map(o => o.id) || []);
-
-      if (topProductsError) throw topProductsError;
-
-      const productQuantities = topProductsData?.reduce((acc, item) => {
+      const productQuantities = topProductsData.reduce((acc, item) => {
         acc[item.product_id] = {
           quantity: (acc[item.product_id]?.quantity || 0) + (item.quantity || 0),
           total_revenue: (acc[item.product_id]?.total_revenue || 0) + (item.total_price || 0)
         };
         return acc;
-      }, {} as Record<string, { quantity: number; total_revenue: number }>) || {};
+      }, {} as Record<string, { quantity: number; total_revenue: number }>);
 
       const topProductIds = Object.entries(productQuantities)
         .sort(([, a], [, b]) => b.quantity - a.quantity)
         .slice(0, 50)
         .map(([id]) => id);
 
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('id, name')
-        .in('id', topProductIds);
+      let productsData: Array<{ id: string; name: string }> = [];
+      if (topProductIds.length > 0) {
+        const { data, error: productsError } = await supabase
+          .from('products')
+          .select('id, name')
+          .in('id', topProductIds);
 
-      if (productsError) throw productsError;
+        if (productsError) throw productsError;
+        productsData = data || [];
+      }
 
       const topProducts = topProductIds
         .map(id => {
-          const product = productsData?.find(p => p.id === id);
+          const product = productsData.find(p => p.id === id);
           return product ? {
             id,
             name: product.name || 'Unknown Product',
@@ -108,17 +169,15 @@ export function useSalesReports(startDate: string, endDate: string) {
         })
         .filter((p): p is NonNullable<typeof p> => p != null);
 
-      // Sales by category
-      const { data: categoryData, error: categoryError } = await supabase
-        .from('order_items')
-        .select('order_id, total_price, products!inner(category_id)')
-        .in('order_id', ordersData?.map(o => o.id) || []);
+      // Sales by category - using batch query
+      const categoryData = await batchQuery<{ order_id: string; total_price: number; products: { category_id: string } | null }>(
+        'order_items',
+        'order_id, total_price, products!inner(category_id)',
+        'order_id',
+        orderIds
+      );
 
-      if (categoryError) throw categoryError;
-
-      console.log('Category Data:', JSON.stringify(categoryData, null, 2));
-
-      const categoryStats = categoryData?.reduce((acc, item) => {
+      const categoryStats = categoryData.reduce((acc, item) => {
         const categoryId = item.products?.category_id;
         if (categoryId) {
           if (!acc[categoryId]) {
@@ -128,23 +187,23 @@ export function useSalesReports(startDate: string, endDate: string) {
           acc[categoryId].order_ids.add(item.order_id);
         }
         return acc;
-      }, {} as Record<string, { total_revenue: number; order_ids: Set<string> }>) || {};
-
-      console.log('Category Stats:', JSON.stringify(categoryStats, null, 2));
+      }, {} as Record<string, { total_revenue: number; order_ids: Set<string> }>);
 
       const categoryIds = Object.keys(categoryStats);
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('id, name')
-        .in('id', categoryIds);
+      let categoriesData: Array<{ id: string; name: string }> = [];
+      if (categoryIds.length > 0) {
+        const { data, error: categoriesError } = await supabase
+          .from('categories')
+          .select('id, name')
+          .in('id', categoryIds);
 
-      if (categoriesError) throw categoriesError;
-
-      console.log('Categories Data:', JSON.stringify(categoriesData, null, 2));
+        if (categoriesError) throw categoriesError;
+        categoriesData = data || [];
+      }
 
       const salesByCategory = categoryIds
         .map(id => {
-          const category = categoriesData?.find(c => c.id === id);
+          const category = categoriesData.find(c => c.id === id);
           return category ? {
             category_id: id,
             category_name: category.name || 'Unknown Category',
@@ -154,22 +213,36 @@ export function useSalesReports(startDate: string, endDate: string) {
         })
         .filter((c): c is NonNullable<typeof c> => c != null);
 
-      // Daily sales
-      const { data: dailySalesData, error: dailySalesError } = await supabase
-        .from('order_items')
-        .select('total_price, created_at, order_id, quantity')
-        .in('order_id', ordersData?.map(o => o.id) || []);
+      // Daily sales - using batch query
+      const dailySalesData = await batchQuery<{ total_price: number; order_id: string; quantity: number }>(
+        'order_items',
+        'total_price, order_id, quantity',
+        'order_id',
+        orderIds
+      );
 
-      if (dailySalesError) throw dailySalesError;
+      // Create a map of order IDs to order dates for daily sales calculation
+      const orderDateMap = new Map<string, string>();
+      ordersData.forEach(order => {
+        orderDateMap.set(order.id, order.created_at);
+      });
 
       const dateRangeDays = Math.ceil(
         (new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)
       ) + 1;
 
       const dailySales = Array.from({ length: dateRangeDays }, (_, i) => {
-        const date = new Date(new Date(endDate).getTime() - i * 24 * 60 * 60 * 1000);
+        const date = new Date(new Date(startDate).getTime() + i * 24 * 60 * 60 * 1000);
         const dateStr = date.toISOString().split('T')[0];
-        const dayItems = dailySalesData?.filter(item => item.created_at.toString().startsWith(dateStr)) || [];
+        // Filter items by matching their order's created_at date
+        const dayItems = dailySalesData.filter(item => {
+          const orderDate = orderDateMap.get(item.order_id);
+          if (!orderDate) return false;
+          const orderDateStr = typeof orderDate === 'string' 
+            ? orderDate.split('T')[0] 
+            : new Date(orderDate).toISOString().split('T')[0];
+          return orderDateStr === dateStr;
+        });
         const total_revenue = dayItems.reduce((sum, item) => sum + (item.total_price || 0), 0);
         const total_items = dayItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
         const orderIds = new Set(dayItems.map(item => item.order_id));
@@ -179,7 +252,7 @@ export function useSalesReports(startDate: string, endDate: string) {
           total_orders: orderIds.size,
           total_items
         };
-      }).reverse();
+      });
 
       setReports({
         totalRevenue,
