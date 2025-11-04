@@ -8,10 +8,10 @@ export interface Category {
 export interface Product {
   id: string;
   name: string;
-  description: string;
+  description?: string; // Optional - lazy loaded for better egress performance
   price: number;
   category_id: string;
-  image_url: string;
+  image_url?: string; // Optional - lazy loaded for better egress performance
   is_available: boolean;
   created_at: string;
 }

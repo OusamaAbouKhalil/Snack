@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, Edit, Trash2, Search, Package, Upload, X } from 'lucide-react';
-import { useProducts } from '../../hooks/useProducts';
+import { useAdminProducts } from '../../hooks/useAdminProducts';
 import { useProductManagement } from '../../hooks/useProductManagement';
 import { Product } from '../../types';
 
 export function ProductManagement() {
-  const { products, categories, loading, error, refetch } = useProducts();
+  const { products, categories, loading, error, refetch } = useAdminProducts();
   const { createProduct, updateProduct, deleteProduct, loading: actionLoading } = useProductManagement();
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);

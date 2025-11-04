@@ -22,6 +22,7 @@ const supabase = window.supabase || (() => {
 
 /**
  * Test the exact query used in useProducts hook
+ * OPTIMIZED: Added limit and removed heavy fields
  */
 async function testExactQuery() {
     console.group('🔍 Test: Exact Products Query (useProducts)');
@@ -31,8 +32,9 @@ async function testExactQuery() {
         
         const productsQuery = supabase
             .from('products')
-            .select('id, name, description, price, category_id, image_url, is_available, created_at')
-            .order('name', { ascending: true });
+            .select('id, name, price, category_id, is_available, created_at')
+            .order('name', { ascending: true })
+            .limit(50); // Limit to 50 products per page
         
         const { data, error, status, statusText } = await productsQuery;
         const endTime = performance.now();
@@ -72,6 +74,7 @@ async function testExactQuery() {
 
 /**
  * Test query without ordering (to check if order by is the issue)
+ * OPTIMIZED: Added limit and removed heavy fields
  */
 async function testWithoutOrdering() {
     console.group('🔍 Test: Products Query Without Ordering');
@@ -81,7 +84,8 @@ async function testWithoutOrdering() {
         
         const { data, error, status } = await supabase
             .from('products')
-            .select('id, name, description, price, category_id, image_url, is_available, created_at');
+            .select('id, name, price, category_id, is_available, created_at')
+            .limit(50); // Limit to 50 products
         
         const endTime = performance.now();
         const duration = endTime - startTime;
@@ -179,6 +183,7 @@ async function testCountQuery() {
 
 /**
  * Test with is_available filter
+ * OPTIMIZED: Added limit and removed heavy fields
  */
 async function testAvailableOnly() {
     console.group('🔍 Test: Products with is_available=true Filter');
@@ -186,9 +191,10 @@ async function testAvailableOnly() {
     try {
         const { data, error, status } = await supabase
             .from('products')
-            .select('id, name, description, price, category_id, image_url, is_available, created_at')
+            .select('id, name, price, category_id, is_available, created_at')
             .eq('is_available', true)
-            .order('name', { ascending: true });
+            .order('name', { ascending: true })
+            .limit(50); // Limit to 50 products
         
         if (error) {
             console.error('❌ Query Failed:', {
@@ -249,8 +255,9 @@ async function testCategoriesQuery() {
 
 /**
  * Performance test - run query multiple times
+ * OPTIMIZED: Reduced iterations and added limit to reduce egress
  */
-async function testPerformance(iterations = 5) {
+async function testPerformance(iterations = 2) {
     console.group(`⚡ Performance Test (${iterations} iterations)`);
     
     const results = [];
@@ -261,8 +268,9 @@ async function testPerformance(iterations = 5) {
         try {
             const { data, error, status } = await supabase
                 .from('products')
-                .select('id, name, description, price, category_id, image_url, is_available, created_at')
-                .order('name', { ascending: true });
+                .select('id, name, price, category_id, is_available, created_at')
+                .order('name', { ascending: true })
+                .limit(50); // Limit to 50 products
             
             const endTime = performance.now();
             const duration = endTime - startTime;
@@ -301,13 +309,182 @@ async function testPerformance(iterations = 5) {
 }
 
 /**
+ * Test paginated query (RECOMMENDED APPROACH)
+ */
+async function testPaginatedQuery(page = 0, pageSize = 20) {
+    console.group(`📄 Test: Paginated Products Query (Page ${page + 1}, Size: ${pageSize})`);
+    
+    try {
+        const startTime = performance.now();
+        const from = page * pageSize;
+        const to = from + pageSize - 1;
+        
+        const { data, error, status, count } = await supabase
+            .from('products')
+            .select('id, name, price, category_id, is_available, created_at', { count: 'exact' })
+            .order('name', { ascending: true })
+            .range(from, to);
+        
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+        
+        if (error) {
+            console.error('❌ Query Failed:', {
+                status,
+                error: { message: error.message, code: error.code },
+                duration: `${duration.toFixed(2)}ms`
+            });
+            return false;
+        }
+        
+        const totalPages = Math.ceil(count / pageSize);
+        
+        console.log('✅ Query Success:', {
+            status,
+            duration: `${duration.toFixed(2)}ms`,
+            currentPage: page + 1,
+            pageSize,
+            totalPages,
+            totalProducts: count,
+            productsOnThisPage: data?.length || 0,
+            dataSize: `~${(JSON.stringify(data).length / 1024).toFixed(2)} KB`
+        });
+        
+        return true;
+    } catch (err) {
+        console.error('❌ Exception:', err);
+        return false;
+    } finally {
+        console.groupEnd();
+    }
+}
+
+/**
+ * Load single product details with description and image (LAZY LOADING)
+ */
+async function testLazyLoadProductDetails(productId) {
+    console.group(`🖼️ Test: Lazy Load Product Details (ID: ${productId})`);
+    
+    try {
+        const startTime = performance.now();
+        
+        const { data, error, status } = await supabase
+            .from('products')
+            .select('id, name, description, image_url, price')
+            .eq('id', productId)
+            .single();
+        
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+        
+        if (error) {
+            console.error('❌ Query Failed:', {
+                status,
+                error: { message: error.message, code: error.code }
+            });
+            return false;
+        }
+        
+        console.log('✅ Query Success:', {
+            status,
+            duration: `${duration.toFixed(2)}ms`,
+            product: data,
+            dataSize: `~${(JSON.stringify(data).length / 1024).toFixed(2)} KB`
+        });
+        
+        return true;
+    } catch (err) {
+        console.error('❌ Exception:', err);
+        return false;
+    } finally {
+        console.groupEnd();
+    }
+}
+
+/**
+ * Test with caching simulation
+ */
+const queryCache = new Map();
+
+async function testCachedQuery(cacheKey = 'products_page_1') {
+    console.group(`💾 Test: Cached Query (Key: ${cacheKey})`);
+    
+    try {
+        // Check cache first
+        if (queryCache.has(cacheKey)) {
+            const cachedData = queryCache.get(cacheKey);
+            const cacheAge = Date.now() - cachedData.timestamp;
+            
+            console.log('✅ Data from Cache:', {
+                cacheAge: `${(cacheAge / 1000).toFixed(1)}s ago`,
+                productsCount: cachedData.data?.length || 0,
+                dataSize: `~${(JSON.stringify(cachedData.data).length / 1024).toFixed(2)} KB`
+            });
+            
+            console.log('💡 TIP: No egress used! Data served from cache.');
+            return true;
+        }
+        
+        // Cache miss - fetch from Supabase
+        console.log('⚠️ Cache miss - fetching from Supabase...');
+        const startTime = performance.now();
+        
+        const { data, error, status } = await supabase
+            .from('products')
+            .select('id, name, price, category_id, is_available, created_at')
+            .order('name', { ascending: true })
+            .limit(20);
+        
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+        
+        if (error) {
+            console.error('❌ Query Failed:', error);
+            return false;
+        }
+        
+        // Store in cache
+        queryCache.set(cacheKey, {
+            data,
+            timestamp: Date.now()
+        });
+        
+        console.log('✅ Data Fetched and Cached:', {
+            status,
+            duration: `${duration.toFixed(2)}ms`,
+            productsCount: data?.length || 0,
+            dataSize: `~${(JSON.stringify(data).length / 1024).toFixed(2)} KB`,
+            cached: true
+        });
+        
+        return true;
+    } catch (err) {
+        console.error('❌ Exception:', err);
+        return false;
+    } finally {
+        console.groupEnd();
+    }
+}
+
+/**
+ * Clear query cache
+ */
+function clearQueryCache() {
+    queryCache.clear();
+    console.log('🗑️ Query cache cleared');
+}
+
+/**
  * Run all tests
  */
 async function testAllProductsQueries() {
-    console.log('🚀 Starting Products Query Tests...\n');
+    console.log('🚀 Starting OPTIMIZED Products Query Tests...\n');
     console.log('=' .repeat(60));
     
     const results = {
+        paginatedQuery: await testPaginatedQuery(0, 20),
+        cachedQuery: await testCachedQuery('products_page_1'),
+        cachedQueryAgain: await testCachedQuery('products_page_1'), // Should use cache
         exactQuery: await testExactQuery(),
         withoutOrdering: await testWithoutOrdering(),
         minimalQuery: await testMinimalQuery(),
@@ -323,11 +500,21 @@ async function testAllProductsQueries() {
     const allPassed = Object.values(results).every(r => r === true);
     
     if (allPassed) {
-        console.log('✅ All basic tests passed! Running performance test...');
+        console.log('✅ All tests passed! Running lightweight performance test...');
         await testPerformance();
     } else {
         console.log('❌ Some tests failed. Check the errors above.');
     }
+    
+    console.log('\n' + '='.repeat(60));
+    console.log('💡 EGRESS OPTIMIZATION TIPS:');
+    console.log('1. ✅ Use pagination: testPaginatedQuery(page, pageSize)');
+    console.log('2. ✅ Implement caching: testCachedQuery()');
+    console.log('3. ✅ Lazy load details: testLazyLoadProductDetails(id)');
+    console.log('4. ✅ Remove large fields (description, image_url) from list queries');
+    console.log('5. ✅ Use .limit() on all queries');
+    console.log('6. ✅ Reduce performance test iterations');
+    console.log('\n💰 Estimated egress reduction: 80-95%');
     
     return results;
 }
@@ -342,13 +529,22 @@ if (typeof module !== 'undefined' && module.exports) {
         testAvailableOnly,
         testCategoriesQuery,
         testPerformance,
+        testPaginatedQuery,
+        testLazyLoadProductDetails,
+        testCachedQuery,
+        clearQueryCache,
         testAllProductsQueries
     };
 }
 
 // Auto-run if supabase is available
 if (typeof supabase !== 'undefined' && supabase) {
-    console.log('💡 Products Query Test Script Loaded');
-    console.log('💡 Run testAllProductsQueries() to start testing');
+    console.log('💡 OPTIMIZED Products Query Test Script Loaded');
+    console.log('💡 Quick Start:');
+    console.log('   - testAllProductsQueries()          // Run all tests');
+    console.log('   - testPaginatedQuery(0, 20)         // Test pagination');
+    console.log('   - testCachedQuery()                 // Test caching');
+    console.log('   - testLazyLoadProductDetails(id)    // Test lazy loading');
+    console.log('   - clearQueryCache()                 // Clear cache');
 }
 

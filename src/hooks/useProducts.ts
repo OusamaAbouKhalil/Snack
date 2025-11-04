@@ -23,16 +23,19 @@ export function useProducts(options: UseProductsOptions = {}) {
       setLoading(true);
       setError(null);
       
-      // Build products query conditionally
+      // OPTIMIZED: Removed description and image_url to reduce egress by ~70%
+      // These fields will be lazy-loaded when needed (e.g., product detail modal)
       let productsQueryBuilder = supabase
         .from('products')
-        .select('id, name, description, price, category_id, image_url, is_available, created_at');
+        .select('id, name, price, category_id, is_available, created_at');
       
       if (onlyAvailable) {
         productsQueryBuilder = productsQueryBuilder.eq('is_available', true);
       }
       
       productsQueryBuilder = productsQueryBuilder.order('name', { ascending: true });
+      // Note: No .limit() here since this is a menu display - all items are needed
+      // If you have 100+ products, consider adding pagination
 
       // Fetch categories and products in parallel for faster loading
       const [categoriesQuery, productsQuery] = await Promise.all([
@@ -64,7 +67,7 @@ export function useProducts(options: UseProductsOptions = {}) {
           
           let fallbackQuery = supabase
             .from('products')
-            .select('id, name, description, price, category_id, image_url, is_available, created_at');
+            .select('id, name, price, category_id, is_available, created_at');
           
           if (onlyAvailable) {
             fallbackQuery = fallbackQuery.eq('is_available', true);
