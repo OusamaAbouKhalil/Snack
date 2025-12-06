@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { ProductCard } from './ProductCard';
 import { Product, Category } from '../types';
+import { useProductImages } from '../hooks/useProductImages';
 
 interface MenuProps {
   products: Product[];
@@ -15,6 +16,13 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Lazy load images for visible products
+  const productIds = useMemo(() => {
+    return products.map(p => p.id);
+  }, [products]);
+  
+  const { imageMap, registerElement } = useProductImages(productIds);
 
   useEffect(() => {
     const handleScroll = () => setIsSticky(window.scrollY > 200);
@@ -241,7 +249,11 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
                         className="animate-fade-in-up"
                         style={{ animationDelay: `${i * 100}ms` }}
                       >
-                        <ProductCard product={product} />
+                        <ProductCard 
+                          product={product} 
+                          imageUrl={imageMap[product.id] || undefined}
+                          onImageElementReady={registerElement}
+                        />
                       </div>
                     ))}
                   </div>
@@ -256,7 +268,11 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
                   className="animate-fade-in-up"
                   style={{ animationDelay: `${i * 100}ms` }}
                 >
-                  <ProductCard product={product} />
+                      <ProductCard 
+                        product={product} 
+                        imageUrl={imageMap[product.id] || undefined}
+                        onImageElementReady={registerElement}
+                      />
                 </div>
               ))}
             </div>

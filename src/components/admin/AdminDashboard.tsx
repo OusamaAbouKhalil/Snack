@@ -70,9 +70,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex transition-colors duration-300">
       {/* Sidebar */}
       <div className={`${collapsed ? 'w-20' : 'w-64'} bg-white dark:bg-gray-800 shadow-lg transition-all duration-300`}>
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <div className={`p-4 border-b border-gray-200 dark:border-gray-700 flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
           {!collapsed && <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">Admin Panel</h2>}
-          <div className="flex gap-2">
+          <div className={`flex gap-2 ${collapsed ? 'flex-col' : 'flex-row'}`}>
             <ThemeToggle />
             <LanguageToggle />
             <button

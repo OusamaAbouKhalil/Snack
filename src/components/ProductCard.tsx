@@ -1,14 +1,28 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { Star, Heart } from 'lucide-react';
 import { Product } from '../types';
 import { useSettings } from '../hooks/useSettings';
 
 interface ProductCardProps {
   product: Product;
+  imageUrl?: string | null;
+  onImageElementReady?: (productId: string, element: HTMLDivElement | null) => void;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, imageUrl, onImageElementReady }: ProductCardProps) {
   const { settings } = useSettings();
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (onImageElementReady && imageContainerRef.current) {
+      onImageElementReady(product.id, imageContainerRef.current);
+    }
+    return () => {
+      if (onImageElementReady) {
+        onImageElementReady(product.id, null);
+      }
+    };
+  }, [product.id, onImageElementReady]);
 
   const prices = useMemo(() => {
     const exchangeRate = settings?.usd_to_lbp_rate || 90000;
@@ -20,14 +34,24 @@ export function ProductCard({ product }: ProductCardProps) {
     };
   }, [product.price, settings?.usd_to_lbp_rate]);
 
+  // Use provided imageUrl, fallback to product.image_url, or null
+  // If imageUrl is explicitly null/undefined from hook, use it; otherwise fallback to product.image_url
+  const displayImageUrl = imageUrl !== undefined && imageUrl !== null ? imageUrl : (product.image_url || null);
+  
+
   return (
     <div className="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 border border-gray-100 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-600">
-      <div className="aspect-video bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center relative overflow-hidden transition-colors duration-300">
-        {product.image_url ? (
+      <div 
+        ref={imageContainerRef}
+        className="aspect-video bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center relative overflow-hidden transition-colors duration-300"
+      >
+        {displayImageUrl ? (
           <img
-            src={product.image_url}
+            key={displayImageUrl}
+            src={displayImageUrl}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            loading="lazy"
           />
         ) : (
           <div className="text-6xl opacity-60 group-hover:scale-110 transition-transform duration-300">🍽️</div>
