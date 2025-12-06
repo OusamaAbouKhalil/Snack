@@ -40,3 +40,57 @@ export interface CartItem {
   product: Product;
   quantity: number;
 }
+
+export interface ExpenseCategory {
+  id: string;
+  name_en: string;
+  name_ar: string;
+  display_order: number;
+  created_at: string;
+}
+
+export interface FinancialRecord {
+  id: string;
+  type: 'expense' | 'income';
+  category_id: string | null;
+  amount: number;
+  description: string;
+  record_date: string;
+  created_at: string;
+  updated_at: string;
+  category?: ExpenseCategory;
+}
+
+export interface DateRange {
+  from: string;
+  to: string;
+}
+
+export interface FinancialStats {
+  totalExpenses: number;
+  totalProfits: number;
+  netProfit: number;
+  recordsCount: number;
+  expensesByCategory: Array<{
+    category_id: string | null;
+    category_name: string;
+    total: number;
+  }>;
+  expensesOverTime: Array<{
+    date: string;
+    expenses: number;
+    profits: number;
+  }>;
+  monthlyBreakdown: Array<{
+    month: string;
+    expenses: number;
+    profits: number;
+    net: number;
+  }>;
+  yearlyBreakdown: Array<{
+    year: string;
+    expenses: number;
+    profits: number;
+    net: number;
+  }>;
+}

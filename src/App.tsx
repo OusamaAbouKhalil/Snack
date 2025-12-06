@@ -5,6 +5,7 @@ import { LoginModal } from './components/auth/LoginModal';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { ThemeToggle } from './components/ThemeToggle';
 import { useProducts } from './hooks/useProducts';
 import { Coffee } from 'lucide-react';
@@ -167,9 +168,11 @@ function AppRouter() {
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <AppRouter />
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <AppRouter />
+        </AuthProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }
