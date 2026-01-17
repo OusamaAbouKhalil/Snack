@@ -46,7 +46,7 @@ export function Dashboard() {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="Enter access code"
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
               />
               {codeError && (
                 <p className="text-red-600 dark:text-red-400 text-sm mt-2">{codeError}</p>
@@ -54,7 +54,7 @@ export function Dashboard() {
             </div>
             <button
               type="submit"
-              className="w-full bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+              className="w-full bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
             >
               Submit
             </button>
@@ -67,7 +67,7 @@ export function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
       </div>
     );
   }
@@ -269,7 +269,7 @@ export function Dashboard() {
               id="daysFilter"
               value={selectedDays}
               onChange={handleDaysChange}
-              className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
+              className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
             >
               <option value="7">7 Days</option>
               <option value="14">14 Days</option>
@@ -278,7 +278,7 @@ export function Dashboard() {
           </div>
           <button
             onClick={() => refetch()}
-            className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+            className="bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
           >
             <RefreshCw size={16} />
             Refresh
@@ -375,7 +375,7 @@ export function Dashboard() {
               stats.topProducts.map((product, index) => (
                 <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="bg-orange-100 text-orange-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">
+                    <div className="bg-primary-100 text-primary-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">
                       {index + 1}
                     </div>
                     <div>
@@ -425,8 +425,8 @@ export function Dashboard() {
             <p className="text-sm text-gray-600">Low Stock</p>
           </div>
           <div className="text-center">
-            <div className="bg-orange-100 p-3 rounded-lg w-fit mx-auto mb-2">
-              <Clock className="text-orange-600" size={24} />
+            <div className="bg-primary-100 p-3 rounded-lg w-fit mx-auto mb-2">
+              <Clock className="text-primary-600" size={24} />
             </div>
             <p className="text-2xl font-bold text-gray-900">{stats.pendingOrders}</p>
             <p className="text-sm text-gray-600">Pending Orders</p>

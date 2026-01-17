@@ -24,7 +24,7 @@ export function AdminUserManagement() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
       </div>
     );
   }
@@ -38,7 +38,7 @@ export function AdminUserManagement() {
         </div>
         <button
           onClick={() => setShowAddForm(true)}
-          className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+          className="bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
           <Plus size={20} />
           Add Admin
@@ -74,8 +74,8 @@ export function AdminUserManagement() {
                 <tr key={admin.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
-                      <div className="bg-orange-100 dark:bg-orange-900/50 p-2 rounded-lg">
-                        <Shield className="text-orange-600 dark:text-orange-400" size={20} />
+                      <div className="bg-primary-100 dark:bg-primary-900/50 p-2 rounded-lg">
+                        <Shield className="text-primary-600 dark:text-primary-400" size={20} />
                       </div>
                       <div>
                         <div className="font-medium text-gray-900 dark:text-gray-100">{admin.email}</div>
@@ -145,7 +145,7 @@ export function AdminUserManagement() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
                     placeholder="Enter email address"
                     required
                   />
@@ -168,7 +168,7 @@ export function AdminUserManagement() {
                   <button
                     type="submit"
                     disabled={addLoading}
-                    className="flex-1 px-4 py-2 bg-orange-500 dark:bg-orange-600 text-white rounded-lg hover:bg-orange-600 dark:hover:bg-orange-700 transition-colors disabled:opacity-50"
+                    className="flex-1 px-4 py-2 bg-primary-500 dark:bg-primary-600 text-white rounded-lg hover:bg-primary-600 dark:hover:bg-primary-700 transition-colors disabled:opacity-50"
                   >
                     {addLoading ? 'Adding...' : 'Add Admin'}
                   </button>

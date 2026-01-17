@@ -59,13 +59,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('admin_users')
-        .select('id')
+        .select('id, is_active')
         .eq('user_id', user.id)
         .eq('is_active', true)
-        .single();
+        .maybeSingle(); // Use maybeSingle() instead of single() to avoid errors when no record found
 
-      setIsAdmin(!!data && !error);
+      if (error) {
+        console.error('Admin status check error:', error);
+        setIsAdmin(false);
+        return;
+      }
+
+      const isAdminUser = !!data && data.is_active === true;
+      setIsAdmin(isAdminUser);
+      
+      if (!isAdminUser) {
+        console.warn('User is not an admin:', {
+          userId: user.id,
+          email: user.email,
+          adminRecord: data
+        });
+      }
     } catch (error) {
+      console.error('Error checking admin status:', error);
       setIsAdmin(false);
     }
   };

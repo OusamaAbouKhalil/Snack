@@ -329,7 +329,7 @@ export function InventoryManagement() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
       </div>
     );
   }
@@ -356,7 +356,7 @@ export function InventoryManagement() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
           >
             <Plus size={20} />
             <span className="hidden sm:inline">Add Ingredient</span>
@@ -392,7 +392,7 @@ export function InventoryManagement() {
                     type="text"
                     value={newIngredient.name}
                     onChange={(e) => setNewIngredient({...newIngredient, name: e.target.value})}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 shadow-sm focus:border-orange-500 dark:focus:border-orange-600 focus:ring-2 focus:ring-orange-500/20 transition-colors duration-300"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 shadow-sm focus:border-primary-500 dark:focus:border-primary-600 focus:ring-2 focus:ring-primary-500/20 transition-colors duration-300"
                     required
                   />
                 </div>
@@ -402,7 +402,7 @@ export function InventoryManagement() {
                     type="text"
                     value={newIngredient.description}
                     onChange={(e) => setNewIngredient({...newIngredient, description: e.target.value})}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 shadow-sm focus:border-orange-500 dark:focus:border-orange-600 focus:ring-2 focus:ring-orange-500/20 transition-colors duration-300"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 shadow-sm focus:border-primary-500 dark:focus:border-primary-600 focus:ring-2 focus:ring-primary-500/20 transition-colors duration-300"
                   />
                 </div>
                 <div>
@@ -410,7 +410,7 @@ export function InventoryManagement() {
                   <select
                     value={newIngredient.unit}
                     onChange={(e) => setNewIngredient({...newIngredient, unit: e.target.value})}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 shadow-sm focus:border-orange-500 dark:focus:border-orange-600 focus:ring-2 focus:ring-orange-500/20 transition-colors duration-300"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 shadow-sm focus:border-primary-500 dark:focus:border-primary-600 focus:ring-2 focus:ring-primary-500/20 transition-colors duration-300"
                     required
                   >
                     <option value="">Select a unit</option>
@@ -426,7 +426,7 @@ export function InventoryManagement() {
                   <select
                     value={newIngredient.category_id}
                     onChange={(e) => setNewIngredient({...newIngredient, category_id: e.target.value})}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 shadow-sm focus:border-orange-500 dark:focus:border-orange-600 focus:ring-2 focus:ring-orange-500/20 transition-colors duration-300"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 shadow-sm focus:border-primary-500 dark:focus:border-primary-600 focus:ring-2 focus:ring-primary-500/20 transition-colors duration-300"
                   >
                     <option value="">No Category</option>
                     {categories.map(category => (
@@ -440,7 +440,7 @@ export function InventoryManagement() {
                     type="number"
                     value={newIngredient.stock_quantity}
                     onChange={(e) => setNewIngredient({...newIngredient, stock_quantity: e.target.value})}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 shadow-sm focus:border-orange-500 dark:focus:border-orange-600 focus:ring-2 focus:ring-orange-500/20 transition-colors duration-300"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 shadow-sm focus:border-primary-500 dark:focus:border-primary-600 focus:ring-2 focus:ring-primary-500/20 transition-colors duration-300"
                     min="0"
                     required
                   />
@@ -451,7 +451,7 @@ export function InventoryManagement() {
                     type="number"
                     value={newIngredient.min_stock_level}
                     onChange={(e) => setNewIngredient({...newIngredient, min_stock_level: e.target.value})}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 shadow-sm focus:border-orange-500 dark:focus:border-orange-600 focus:ring-2 focus:ring-orange-500/20 transition-colors duration-300"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 shadow-sm focus:border-primary-500 dark:focus:border-primary-600 focus:ring-2 focus:ring-primary-500/20 transition-colors duration-300"
                     min="0"
                     required
                   />
@@ -525,7 +525,7 @@ export function InventoryManagement() {
             <select
               value={daysFilter}
               onChange={(e) => setDaysFilter(parseInt(e.target.value))}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-1.5 shadow-sm focus:border-orange-500 dark:focus:border-orange-600 focus:ring-2 focus:ring-orange-500/20 transition-colors duration-300"
+              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-1.5 shadow-sm focus:border-primary-500 dark:focus:border-primary-600 focus:ring-2 focus:ring-primary-500/20 transition-colors duration-300"
             >
               <option value={7}>7 days</option>
               <option value={14}>14 days</option>
@@ -564,7 +564,7 @@ export function InventoryManagement() {
                   placeholder="Search ingredients..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-orange-500 dark:focus:border-orange-600 focus:ring-2 focus:ring-orange-500/20 transition-colors duration-300"
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-primary-500 dark:focus:border-primary-600 focus:ring-2 focus:ring-primary-500/20 transition-colors duration-300"
                 />
               </div>
               
@@ -572,7 +572,7 @@ export function InventoryManagement() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-orange-500 dark:focus:border-orange-600 focus:ring-2 focus:ring-orange-500/20 transition-colors duration-300"
+                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary-500 dark:focus:border-primary-600 focus:ring-2 focus:ring-primary-500/20 transition-colors duration-300"
               >
                 <option value="all">All Status</option>
                 <option value="in-stock">In Stock</option>
@@ -584,7 +584,7 @@ export function InventoryManagement() {
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-orange-500 dark:focus:border-orange-600 focus:ring-2 focus:ring-orange-500/20 transition-colors duration-300"
+                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary-500 dark:focus:border-primary-600 focus:ring-2 focus:ring-primary-500/20 transition-colors duration-300"
               >
                 <option value="all">All Categories</option>
                 {[...new Set(inventory.map(item => item.category_name))].map(category => (
@@ -643,8 +643,8 @@ export function InventoryManagement() {
                   <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/50 rounded-lg flex items-center justify-center">
-                          <Package className="text-orange-600 dark:text-orange-400" size={20} />
+                        <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/50 rounded-lg flex items-center justify-center">
+                          <Package className="text-primary-600 dark:text-primary-400" size={20} />
                         </div>
                         <div>
                           <div className="font-medium text-gray-900 dark:text-gray-100">{item.name}</div>
@@ -661,7 +661,7 @@ export function InventoryManagement() {
                             type="number"
                             value={newStock}
                             onChange={(e) => setNewStock(e.target.value)}
-                            className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm focus:border-orange-500 dark:focus:border-orange-600 focus:ring-orange-500 dark:focus:ring-orange-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
+                            className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm focus:border-primary-500 dark:focus:border-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
                             min="0"
                           />
                           <button
@@ -688,7 +688,7 @@ export function InventoryManagement() {
                               setEditingItem(item.ingredient_id);
                               setNewStock(item.stock_quantity.toString());
                             }}
-                            className="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 p-1 transition-colors duration-200"
+                            className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 p-1 transition-colors duration-200"
                           >
                             <Edit size={16} />
                           </button>
@@ -702,7 +702,7 @@ export function InventoryManagement() {
                             type="number"
                             value={newMinStock}
                             onChange={(e) => setNewMinStock(e.target.value)}
-                            className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm focus:border-orange-500 dark:focus:border-orange-600 focus:ring-orange-500 dark:focus:ring-orange-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
+                            className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm focus:border-primary-500 dark:focus:border-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
                             min="0"
                           />
                           <button
@@ -729,7 +729,7 @@ export function InventoryManagement() {
                               setEditingMinStock(item.ingredient_id);
                               setNewMinStock(item.min_stock_level.toString());
                             }}
-                            className="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 p-1 transition-colors duration-200"
+                            className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 p-1 transition-colors duration-200"
                           >
                             <Edit size={16} />
                           </button>
@@ -748,7 +748,7 @@ export function InventoryManagement() {
                             setEditingItem(item.ingredient_id);
                             setNewStock(item.stock_quantity.toString());
                           }}
-                          className="text-orange-600 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300 p-1 transition-colors duration-200"
+                          className="text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-300 p-1 transition-colors duration-200"
                           title="Edit Stock"
                         >
                           <Edit size={16} />
@@ -783,7 +783,7 @@ export function InventoryManagement() {
                   setStatusFilter('all');
                   setCategoryFilter('all');
                 }}
-                className="mt-4 text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 transition-colors duration-200"
+                className="mt-4 text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 transition-colors duration-200"
               >
                 Clear filters
               </button>

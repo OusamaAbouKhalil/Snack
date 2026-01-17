@@ -150,7 +150,7 @@ export function OrderManagement() {
       0
     );
     const orderNumber = `ORD-${Date.now()}`;
-    const storeName = settings?.store_name || "BeSweet";
+    const storeName = settings?.store_name || "Hadi Snack";
     const storeAddress = settings?.store_address || "";
     const storePhone = settings?.store_phone || "";
 
@@ -257,7 +257,7 @@ export function OrderManagement() {
        <div class="header">
                  <img
                   src="/logo.png"
-                  alt="BeSweet Logo"
+                  alt="Hadi Snack Logo"
                 style="max-width:60px; margin:0 auto 4px; display:block;"
                 />
                 ${storeAddress ? `<div class="store-info">${storeAddress}</div>` : ""}
@@ -323,7 +323,7 @@ export function OrderManagement() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
       </div>
     );
   }
@@ -345,7 +345,7 @@ export function OrderManagement() {
         </div>
         <button
           onClick={handleOpenCreateOrder}
-          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+          className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
           <Plus size={20} />
           Create Order
@@ -364,7 +364,7 @@ export function OrderManagement() {
             placeholder="Search orders..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
           />
         </div>
       </div>
@@ -506,7 +506,7 @@ export function OrderManagement() {
                       placeholder="Search products..."
                       value={productSearch}
                       onChange={(e) => setProductSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
                     />
                   </div>
 
@@ -517,7 +517,7 @@ export function OrderManagement() {
                         onClick={() => setSelectedCategory("all")}
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                           selectedCategory === "all"
-                            ? "bg-orange-500 dark:bg-orange-600 text-white"
+                            ? "bg-primary-500 dark:bg-primary-600 text-white"
                             : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                         }`}
                       >
@@ -529,7 +529,7 @@ export function OrderManagement() {
                           onClick={() => setSelectedCategory(category.id)}
                           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                             selectedCategory === category.id
-                              ? "bg-orange-500 dark:bg-orange-600 text-white"
+                              ? "bg-primary-500 dark:bg-primary-600 text-white"
                               : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                           }`}
                         >
@@ -542,7 +542,7 @@ export function OrderManagement() {
                   {/* Products List */}
                   {productsLoading && products.length === 0 ? (
                     <div className="flex items-center justify-center h-64">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
                     </div>
                   ) : filteredProducts.length === 0 ? (
                     <div className="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -554,7 +554,7 @@ export function OrderManagement() {
                       {filteredProducts.map((product) => (
                         <div
                           key={product.id}
-                          className="border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-700 hover:shadow-md transition-all cursor-pointer hover:bg-orange-50 dark:hover:bg-gray-600 hover:border-orange-300 dark:hover:border-orange-600 flex items-center justify-between"
+                          className="border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-700 hover:shadow-md transition-all cursor-pointer hover:bg-primary-50 dark:hover:bg-gray-600 hover:border-primary-300 dark:hover:border-primary-600 flex items-center justify-between"
                           onClick={() => addToCart(product.id)}
                         >
                           <div className="flex-1 min-w-0">
@@ -568,7 +568,7 @@ export function OrderManagement() {
                             )}
                           </div>
                           <div className="ml-3 text-right">
-                            <div className="font-semibold text-orange-600 dark:text-orange-400 text-sm whitespace-nowrap">
+                            <div className="font-semibold text-primary-600 dark:text-primary-400 text-sm whitespace-nowrap">
                               {formatCurrency(product.price)}
                             </div>
                           </div>
@@ -593,7 +593,7 @@ export function OrderManagement() {
                       type="text"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
                       placeholder="Enter customer name"
                     />
                   </div>
@@ -606,7 +606,7 @@ export function OrderManagement() {
                     <select
                       value={paymentMethod}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
                     >
                       <option value="cash">Cash</option>
                       <option value="card">Card</option>
@@ -659,7 +659,7 @@ export function OrderManagement() {
                       <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         Total:
                       </span>
-                      <span className="text-xl font-bold text-orange-600 dark:text-orange-400 whitespace-nowrap">
+                      <span className="text-xl font-bold text-primary-600 dark:text-primary-400 whitespace-nowrap">
                         {formatCurrency(total)}
                       </span>
                     </div>
@@ -671,7 +671,7 @@ export function OrderManagement() {
                         !customerName.trim() ||
                         orderLoading
                       }
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {orderLoading
                         ? "Creating Order..."

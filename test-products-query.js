@@ -10,8 +10,8 @@
  * 4. Run testAllProductsQueries()
  */
 
-const SUPABASE_URL = 'https://dmxkiuzfasdwxsigyizy.supabase.co'; // Replace with your Supabase URL
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRteGtpdXpmYXNkd3hzaWd5aXp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyMDYzMDIsImV4cCI6MjA2NDc4MjMwMn0.IodAc1MndObssiRE-mWqukrLshMbT4UoHAkryYI7Fuk'; // Replace with your anon key
+const SUPABASE_URL = 'https://esyrycoegjqlakjunojd.supabase.co'; // Hadi Snack Supabase URL
+const SUPABASE_KEY = 'sb_publishable_tXT-Kg9GyY_gIKvJ7fJQiw_6rthi70Z'; // Hadi Snack Supabase Key
 
 // Import Supabase client (assuming it's available in your app)
 // If not, you can use: import { createClient } from '@supabase/supabase-js'

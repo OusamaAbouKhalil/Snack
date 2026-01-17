@@ -87,7 +87,7 @@ export function CheckoutModal({
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const storeName = settings?.store_name || 'BeSweet';
+    const storeName = settings?.store_name || 'Hadi Snack';
     const storeAddress = settings?.store_address || '';
     const storePhone = settings?.store_phone || '';
     const exchangeRate = settings?.usd_to_lbp_rate || 90000;
@@ -301,7 +301,7 @@ export function CheckoutModal({
           <div className="flex gap-3">
             <button
               onClick={printInvoice}
-              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+              className="flex-1 bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
             >
               <Printer size={20} />
               Print Invoice
@@ -322,7 +322,7 @@ export function CheckoutModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-orange-500 to-yellow-500 p-6 text-white">
+        <div className="bg-gradient-to-r from-primary-500 to-primary-400 p-6 text-white">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">Checkout</h2>
             <button
@@ -394,7 +394,7 @@ export function CheckoutModal({
                 type="text"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
                 placeholder="Enter customer name"
                 required
               />
@@ -420,7 +420,7 @@ export function CheckoutModal({
                     type="number"
                     value={deliveryFee}
                     onChange={(e) => setDeliveryFee(Math.max(0, Number(e.target.value)))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     placeholder="Enter delivery fee"
                     min="0"
                     step="0.01"

@@ -16,9 +16,9 @@ function GuestApp() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-cream-50 to-cream-100 dark:from-green-900 dark:to-green-800 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 dark:border-orange-400 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-500 dark:border-primary-400 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-300 text-lg">Loading menu...</p>
         </div>
       </div>
@@ -44,22 +44,22 @@ function GuestApp() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-primary-100 to-primary-200 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-cream-50 via-cream-100 to-cream-200 dark:from-green-900 dark:via-green-800 dark:to-green-700 transition-colors duration-300">
       {/* Simple Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-primary-200 dark:border-gray-700 transition-colors duration-300">
+      <header className="bg-white dark:bg-green-900 shadow-sm border-b border-cream-300 dark:border-green-700 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl overflow-hidden bg-white dark:bg-gray-700 p-1 transition-colors duration-300">
+              <div className="w-12 h-12 rounded-xl overflow-hidden bg-white dark:bg-green-800 p-1 transition-colors duration-300">
                 <img
                   src="/logo.png"
-                  alt="BeSweet Logo"
+                  alt="Hadi Snack Logo"
                   className="w-full h-full object-contain"
                 />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-brown-900 dark:text-gray-100 transition-colors duration-300">BeSweet</h1>
-                <p className="text-sm text-brown-700 dark:text-gray-300 transition-colors duration-300">Delicious Food & More</p>
+                <h1 className="text-2xl font-bold text-green-900 dark:text-cream-100 transition-colors duration-300">Hadi Snack</h1>
+                <p className="text-sm text-green-700 dark:text-cream-300 transition-colors duration-300">Delicious Snacks & More</p>
               </div>
             </div>
             <ThemeToggle />
@@ -86,7 +86,7 @@ function AdminApp() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center transition-colors duration-300">
+      <div className="min-h-screen bg-gradient-to-br from-cream-50 to-cream-100 dark:from-green-900 dark:to-green-800 flex items-center justify-center transition-colors duration-300">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-500 dark:border-primary-400 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-300 text-lg">Loading...</p>
@@ -98,13 +98,13 @@ function AdminApp() {
   if (!user) {
     return (
       <>
-        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center transition-colors duration-300">
-          <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+        <div className="min-h-screen bg-gradient-to-br from-cream-50 to-cream-100 dark:from-green-900 dark:to-green-800 flex items-center justify-center transition-colors duration-300">
+          <div className="text-center bg-white dark:bg-green-900 p-8 rounded-xl shadow-lg border border-cream-300 dark:border-green-700 transition-colors duration-300">
             <div className="bg-primary-100 dark:bg-primary-900 p-4 rounded-full w-20 h-20 mx-auto mb-4 transition-colors duration-300">
               <Coffee className="text-primary-600 dark:text-primary-400 w-12 h-12" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Admin Access Required</h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">Please sign in to access the admin panel</p>
+            <h2 className="text-2xl font-bold text-green-900 dark:text-cream-100 mb-2">Admin Access Required</h2>
+            <p className="text-green-700 dark:text-cream-300 mb-4">Please sign in to access the admin panel</p>
             <button 
               onClick={() => setShowLogin(true)}
               className="bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white px-6 py-2 rounded-lg transition-colors"

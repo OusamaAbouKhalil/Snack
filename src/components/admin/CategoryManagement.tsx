@@ -58,7 +58,7 @@ export function CategoryManagement() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
       </div>
     );
   }
@@ -72,7 +72,7 @@ export function CategoryManagement() {
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+          className="bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
           <Plus size={20} />
           Add Category
@@ -100,8 +100,8 @@ export function CategoryManagement() {
                     className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="bg-orange-100 dark:bg-orange-900/50 p-2 rounded-lg">
-                        <FolderOpen className="text-orange-600 dark:text-orange-400" size={20} />
+                      <div className="bg-primary-100 dark:bg-primary-900/50 p-2 rounded-lg">
+                        <FolderOpen className="text-primary-600 dark:text-primary-400" size={20} />
                       </div>
                       <div>
                         <h3 className="font-medium text-gray-900 dark:text-gray-100">{category.name}</h3>
@@ -148,7 +148,7 @@ export function CategoryManagement() {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
                     required
                   />
                 </div>
@@ -161,7 +161,7 @@ export function CategoryManagement() {
                     type="number"
                     value={formData.display_order}
                     onChange={(e) => setFormData({ ...formData, display_order: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
                     placeholder="0"
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Lower numbers appear first</p>
@@ -182,7 +182,7 @@ export function CategoryManagement() {
                   <button
                     type="submit"
                     disabled={actionLoading}
-                    className="flex-1 px-4 py-2 bg-orange-500 dark:bg-orange-600 text-white rounded-lg hover:bg-orange-600 dark:hover:bg-orange-700 transition-colors disabled:opacity-50"
+                    className="flex-1 px-4 py-2 bg-primary-500 dark:bg-primary-600 text-white rounded-lg hover:bg-primary-600 dark:hover:bg-primary-700 transition-colors disabled:opacity-50"
                   >
                     {actionLoading ? 'Saving...' : (editingCategory ? 'Update' : 'Create')}
                   </button>

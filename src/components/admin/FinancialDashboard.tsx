@@ -117,7 +117,7 @@ export function FinancialDashboard({ records: propsRecords, onRefetch }: Financi
       title: t('financial.netProfit'),
       value: `$${stats.netProfit.toFixed(2)}`,
       icon: DollarSign,
-      color: stats.netProfit >= 0 ? 'bg-blue-500' : 'bg-orange-500',
+      color: stats.netProfit >= 0 ? 'bg-blue-500' : 'bg-primary-500',
       change: stats.netProfit >= 0 ? '+' : '',
     },
     {

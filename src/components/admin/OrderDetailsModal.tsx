@@ -14,7 +14,7 @@ export function OrderDetailsModal({ orderId, onClose }: OrderDetailsModalProps) 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-xl p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
         </div>
       </div>
     );
@@ -101,7 +101,7 @@ export function OrderDetailsModal({ orderId, onClose }: OrderDetailsModalProps) 
           <div className="border-t border-gray-200 pt-4">
             <div className="flex justify-between items-center">
               <span className="text-lg font-semibold text-gray-900">Total Amount:</span>
-              <span className="text-2xl font-bold text-orange-600">
+              <span className="text-2xl font-bold text-primary-600">
                 ${order.total_amount.toFixed(2)}
               </span>
             </div>

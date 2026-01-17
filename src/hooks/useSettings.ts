@@ -42,7 +42,7 @@ export function useSettings() {
       const parsedSettings: Settings = {
         tax_rate: parseFloat(settingsObj.tax_rate || '11.0'),
         currency: settingsObj.currency || 'LBP',
-        store_name: settingsObj.store_name || 'BeSweet',
+        store_name: settingsObj.store_name || 'Hadi Snack',
         store_address: settingsObj.store_address || '',
         store_phone: settingsObj.store_phone || '',
         loyalty_points_rate: parseFloat(settingsObj.loyalty_points_rate || '1.0'),
