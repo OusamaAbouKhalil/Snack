@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Get Supabase credentials from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://esyrycoegjqlakjunojd.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_tXT-Kg9GyY_gIKvJ7fJQiw_6rthi70Z';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Validate that we have the required credentials
 if (!supabaseUrl || !supabaseAnonKey) {
