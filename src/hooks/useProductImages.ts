@@ -11,7 +11,7 @@ export function useProductImages(productIds: string[]) {
   const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
   const observerRef = useRef<IntersectionObserver | null>(null);
   const elementRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Batch fetch images for visible products
   const fetchImagesForProducts = useCallback(async (ids: string[]) => {

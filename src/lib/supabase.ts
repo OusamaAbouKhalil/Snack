@@ -1,24 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Get Supabase credentials from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// Validate that we have the required credentials
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ Missing Supabase environment variables!');
-  console.error('Please create a .env file with:');
-  console.error('VITE_SUPABASE_URL=https://esyrycoegjqlakjunojd.supabase.co');
-  console.error('VITE_SUPABASE_ANON_KEY=your_key_here');
-  throw new Error('Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
-}
-
-// Log configuration (without exposing the key)
-console.log('🔧 Supabase configured:', {
-  url: supabaseUrl,
-  keyPrefix: supabaseAnonKey.substring(0, 20) + '...',
-  hasEnvVars: !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
-});
+const supabaseUrl = 'https://efcrmtfshytjflittotm.supabase.co';
+const supabaseAnonKey =  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmY3JtdGZzaHl0amZsaXR0b3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzOTIxMDIsImV4cCI6MjA5OTk2ODEwMn0.IcA3HfB3Hq8n4dbUndyfcmjIWLw63RcmFOkWGhLOqrw';
 
 // Create Supabase client with custom fetch to handle QUIC protocol errors
 // QUIC (HTTP/3) errors can occur when browser tries to use QUIC but connection fails

@@ -6,6 +6,17 @@ interface UseProductsOptions {
   onlyAvailable?: boolean;
 }
 
+// A category marked unavailable pulls itself and every product in it off
+// the storefront — same effect as deleting them, without losing the data.
+function filterUnavailableCategories(categories: Category[], products: Product[], onlyAvailable: boolean) {
+  if (!onlyAvailable) return { categories, products };
+  const unavailableCategoryIds = new Set(categories.filter((c) => !c.is_available).map((c) => c.id));
+  return {
+    categories: categories.filter((c) => c.is_available),
+    products: products.filter((p) => !unavailableCategoryIds.has(p.category_id)),
+  };
+}
+
 export function useProducts(options: UseProductsOptions = {}) {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -41,7 +52,7 @@ export function useProducts(options: UseProductsOptions = {}) {
       const [categoriesQuery, productsQuery] = await Promise.all([
         supabase
           .from('categories')
-          .select('id, name, display_order, created_at')
+          .select('id, name, display_order, is_available, created_at')
           .order('display_order', { ascending: true }),
         productsQueryBuilder
       ]);
@@ -78,11 +89,16 @@ export function useProducts(options: UseProductsOptions = {}) {
           if (!fallbackError && fallbackData) {
             console.log('✅ Fallback succeeded! Sorting in memory...');
             // Sort in memory instead of database
-            const sorted = [...fallbackData].sort((a, b) => 
+            const sorted = [...fallbackData].sort((a, b) =>
               (a.name || '').localeCompare(b.name || '')
             );
-            setProducts(sorted);
-            setCategories(categoriesQuery.data || []);
+            const { categories: visibleCategories, products: visibleProducts } = filterUnavailableCategories(
+              categoriesQuery.data || [],
+              sorted,
+              onlyAvailable
+            );
+            setProducts(visibleProducts);
+            setCategories(visibleCategories);
             return; // Success with fallback
           } else {
             console.warn('⚠️ Fallback query also failed:', fallbackError);
@@ -92,8 +108,13 @@ export function useProducts(options: UseProductsOptions = {}) {
         throw productsQuery.error;
       }
 
-      setCategories(categoriesQuery.data || []);
-      setProducts(productsQuery.data || []);
+      const { categories: visibleCategories, products: visibleProducts } = filterUnavailableCategories(
+        categoriesQuery.data || [],
+        productsQuery.data || [],
+        onlyAvailable
+      );
+      setCategories(visibleCategories);
+      setProducts(visibleProducts);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred';
       setError(errorMessage);
@@ -103,11 +124,11 @@ export function useProducts(options: UseProductsOptions = {}) {
     }
   };
 
-  // Memoize available products
-  const availableProducts = useMemo(() => 
-    products.filter(p => p.is_available), 
-    [products]
-  );
+  // Memoize available products (product itself + its category both available)
+  const availableProducts = useMemo(() => {
+    const unavailableCategoryIds = new Set(categories.filter((c) => !c.is_available).map((c) => c.id));
+    return products.filter((p) => p.is_available && !unavailableCategoryIds.has(p.category_id));
+  }, [products, categories]);
 
   return { 
     products, 

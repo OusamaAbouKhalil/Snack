@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 interface CategoryData {
   name: string;
   display_order: number;
+  is_available?: boolean;
 }
 
 export function useCategoryManagement() {

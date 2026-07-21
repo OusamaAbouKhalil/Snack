@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { BarChart3, FileText, Tag } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useFinancialRecords } from '../../hooks/useFinancialRecords';
@@ -7,6 +7,7 @@ import { FinancialRecordsTable } from './FinancialRecordsTable';
 import { FinancialRecordForm } from './FinancialRecordForm';
 import { ExpenseCategoryManager } from './ExpenseCategoryManager';
 import { FinancialRecord } from '../../types';
+import { PageHeader, Tabs } from './ui/Kit';
 
 type View = 'dashboard' | 'records' | 'categories';
 
@@ -49,12 +50,12 @@ export function FinancialManagement() {
     const result = editingRecord
       ? await updateRecord(editingRecord.id, record)
       : await createRecord(record);
-    
+
     // Refetch records after create/update to ensure dashboard gets updated data
     if (!result.error) {
       refetch();
     }
-    
+
     return result;
   };
 
@@ -66,56 +67,24 @@ export function FinancialManagement() {
 
   return (
     <div className="space-y-6" dir={dir}>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            {t('financial.title')}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            {t('financial.title')}
-          </p>
-        </div>
-      </div>
+      <PageHeader title={t('financial.title')} />
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
-        <nav className="flex space-x-8" aria-label="Tabs">
-          {views.map((view) => {
-            const Icon = view.icon;
-            return (
-              <button
-                key={view.id}
-                onClick={() => setActiveView(view.id)}
-                className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeView === view.id
-                    ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                }`}
-              >
-                <Icon size={20} />
-                {view.label}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
+      <Tabs tabs={views} active={activeView} onChange={setActiveView} />
 
-      {/* Error Display */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-xl text-sm">
           {error}
         </div>
       )}
 
-      {/* Content */}
       <div>
         {activeView === 'dashboard' && (
-          <FinancialDashboard 
+          <FinancialDashboard
             records={records}
             onRefetch={refetch}
           />
         )}
-        
+
         {activeView === 'records' && (
           <FinancialRecordsTable
             records={records}
@@ -147,4 +116,3 @@ export function FinancialManagement() {
     </div>
   );
 }
-

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, TrendingDown, FileText, Calendar, RefreshCw } from 'lucide-react';
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend } from 'chart.js';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useFinancialRecords } from '../../hooks/useFinancialRecords';
 import { FinancialStats, FinancialRecord } from '../../types';
+import { Card, StatCard, Button, Select, Input, TableShell, Thead, Th, Td, Spinner } from './ui/Kit';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend);
 
@@ -14,16 +15,16 @@ interface FinancialDashboardProps {
 }
 
 export function FinancialDashboard({ records: propsRecords, onRefetch }: FinancialDashboardProps = {}) {
-  const { t, dir, language } = useLanguage();
+  const { t, dir } = useLanguage();
   const hookData = useFinancialRecords();
   const { records: hookRecords, calculateStats, dateFilter, setDateFilter, refetch: hookRefetch } = hookData;
-  
+
   // Use props records if provided, otherwise use hook records
   const records = propsRecords || hookRecords;
   const refetch = onRefetch || hookRefetch;
   const [stats, setStats] = useState<FinancialStats | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Set default to current month
   const getCurrentMonth = () => {
     const now = new Date();
@@ -31,12 +32,12 @@ export function FinancialDashboard({ records: propsRecords, onRefetch }: Financi
     const month = String(now.getMonth() + 1).padStart(2, '0');
     return `${year}-${month}`;
   };
-  
+
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [selectedYear, setSelectedYear] = useState('');
   const [customRange, setCustomRange] = useState({ from: '', to: '' });
   const [filterMode, setFilterMode] = useState<'all' | 'month' | 'year' | 'range'>('month');
-  
+
   // Initialize with current month on mount
   useEffect(() => {
     const currentMonth = getCurrentMonth();
@@ -91,11 +92,7 @@ export function FinancialDashboard({ records: propsRecords, onRefetch }: Financi
   };
 
   if (loading || !stats) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-      </div>
-    );
+    return <Spinner size={36} />;
   }
 
   const summaryCards = [
@@ -103,29 +100,25 @@ export function FinancialDashboard({ records: propsRecords, onRefetch }: Financi
       title: t('financial.totalExpenses'),
       value: `$${stats.totalExpenses.toFixed(2)}`,
       icon: TrendingDown,
-      color: 'bg-red-500',
-      change: stats.totalExpenses > 0 ? '+' : '0',
+      tone: 'red' as const,
     },
     {
       title: t('financial.totalProfits'),
       value: `$${stats.totalProfits.toFixed(2)}`,
       icon: TrendingUp,
-      color: 'bg-green-500',
-      change: stats.totalProfits > 0 ? '+' : '0',
+      tone: 'green' as const,
     },
     {
       title: t('financial.netProfit'),
       value: `$${stats.netProfit.toFixed(2)}`,
       icon: DollarSign,
-      color: stats.netProfit >= 0 ? 'bg-blue-500' : 'bg-primary-500',
-      change: stats.netProfit >= 0 ? '+' : '',
+      tone: stats.netProfit >= 0 ? ('blue' as const) : ('amber' as const),
     },
     {
       title: t('financial.recordsCount'),
       value: stats.recordsCount.toString(),
       icon: FileText,
-      color: 'bg-purple-500',
-      change: '',
+      tone: 'primary' as const,
     },
   ];
 
@@ -280,44 +273,39 @@ export function FinancialDashboard({ records: propsRecords, onRefetch }: Financi
   });
 
   return (
-    <div className="space-y-8" dir={dir}>
+    <div className="space-y-6" dir={dir}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            {t('financial.dashboard')}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            {t('financial.title')}
-          </p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 font-display">{t('financial.dashboard')}</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{t('financial.title')}</p>
         </div>
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={RefreshCw}
           onClick={() => {
             refetch();
             loadStats();
           }}
-          className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors"
         >
-          <RefreshCw size={16} />
           {t('common.loading').replace('...', '')}
-        </button>
+        </Button>
       </div>
 
       {/* Date Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Calendar size={20} className="text-gray-500 dark:text-gray-400" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {t('financial.filterByMonth')}:
-            </span>
+      <Card>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+            <Calendar size={18} className="text-gray-400 dark:text-gray-500" />
+            {t('financial.filterByMonth')}:
           </div>
-          <select
+          <Select
             value={filterMode === 'month' ? selectedMonth : ''}
             onChange={(e) => {
               setFilterMode('month');
               setSelectedMonth(e.target.value);
             }}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            className="w-auto"
           >
             <option value="">{t('financial.all')}</option>
             {months.map(month => (
@@ -325,20 +313,16 @@ export function FinancialDashboard({ records: propsRecords, onRefetch }: Financi
                 {getMonthName(month)}
               </option>
             ))}
-          </select>
+          </Select>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {t('financial.filterByYear')}:
-            </span>
-          </div>
-          <select
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('financial.filterByYear')}:</span>
+          <Select
             value={filterMode === 'year' ? selectedYear : ''}
             onChange={(e) => {
               setFilterMode('year');
               setSelectedYear(e.target.value);
             }}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            className="w-auto"
           >
             <option value="">{t('financial.all')}</option>
             {years.map(year => (
@@ -346,36 +330,34 @@ export function FinancialDashboard({ records: propsRecords, onRefetch }: Financi
                 {year}
               </option>
             ))}
-          </select>
+          </Select>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {t('financial.customDateRange')}:
-            </span>
-          </div>
-          <input
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('financial.customDateRange')}:</span>
+          <Input
             type="date"
             value={customRange.from}
             onChange={(e) => {
               setFilterMode('range');
               setCustomRange(prev => ({ ...prev, from: e.target.value }));
             }}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            className="w-auto"
             placeholder={t('financial.fromDate')}
           />
-          <span className="text-gray-500 dark:text-gray-400">-</span>
-          <input
+          <span className="text-gray-400 dark:text-gray-500">-</span>
+          <Input
             type="date"
             value={customRange.to}
             onChange={(e) => {
               setFilterMode('range');
               setCustomRange(prev => ({ ...prev, to: e.target.value }));
             }}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            className="w-auto"
             placeholder={t('financial.toDate')}
           />
 
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => {
               setFilterMode('all');
               setSelectedMonth('');
@@ -383,105 +365,68 @@ export function FinancialDashboard({ records: propsRecords, onRefetch }: Financi
               setCustomRange({ from: '', to: '' });
               setDateFilter({ type: 'all' });
             }}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             {t('financial.all')}
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {summaryCards.map((card, index) => {
-          const Icon = card.icon;
-          return (
-            <div key={index} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{card.title}</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{card.value}</p>
-                </div>
-                <div className={`${card.color} p-3 rounded-lg`}>
-                  <Icon className="text-white" size={24} />
-                </div>
-              </div>
-            </div>
-          );
-        })}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {summaryCards.map((card) => (
+          <StatCard key={card.title} label={card.title} value={card.value} icon={card.icon} tone={card.tone} />
+        ))}
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
           <div className="h-80">
             <Line data={expensesVsProfitsData} options={expensesVsProfitsOptions} />
           </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+        </Card>
+        <Card>
           <div className="h-80">
             <Bar data={expensesByCategoryData} options={expensesByCategoryOptions} />
           </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+        </Card>
+        <Card>
           <div className="flex flex-col items-center justify-center" style={{ height: '320px' }}>
             <div className="w-full max-w-md">
               <Pie data={expenseDistributionData} options={expenseDistributionOptions} />
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Monthly Breakdown Table */}
       {stats.monthlyBreakdown.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              {t('financial.monthlyBreakdown')}
-            </h3>
+        <Card padded={false}>
+          <div className="p-6 pb-4">
+            <h3 className="font-bold text-gray-900 dark:text-gray-100">{t('financial.monthlyBreakdown')}</h3>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    {t('common.date')}
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    {t('financial.totalExpenses')}
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    {t('financial.totalProfits')}
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    {t('financial.netProfit')}
-                  </th>
+          <TableShell>
+            <Thead>
+              <Th>{t('common.date')}</Th>
+              <Th align="end">{t('financial.totalExpenses')}</Th>
+              <Th align="end">{t('financial.totalProfits')}</Th>
+              <Th align="end">{t('financial.netProfit')}</Th>
+            </Thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              {stats.monthlyBreakdown.map((item) => (
+                <tr key={item.month} className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+                  <Td className="text-gray-900 dark:text-gray-100">{getMonthName(item.month)}</Td>
+                  <Td align="end" className="text-red-600 dark:text-red-400 font-semibold tabular-nums">${item.expenses.toFixed(2)}</Td>
+                  <Td align="end" className="text-green-600 dark:text-green-400 font-semibold tabular-nums">${item.profits.toFixed(2)}</Td>
+                  <Td align="end" className={`font-semibold tabular-nums ${item.net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    ${item.net.toFixed(2)}
+                  </Td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {stats.monthlyBreakdown.map((item) => (
-                  <tr key={item.month} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
-                      {getMonthName(item.month)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-right text-red-600 dark:text-red-400 font-medium">
-                      ${item.expenses.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-right text-green-600 dark:text-green-400 font-medium">
-                      ${item.profits.toFixed(2)}
-                    </td>
-                    <td className={`px-4 py-3 text-sm text-right font-medium ${
-                      item.net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                    }`}>
-                      ${item.net.toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              ))}
+            </tbody>
+          </TableShell>
+        </Card>
       )}
     </div>
   );
 }
-

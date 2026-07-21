@@ -8,8 +8,10 @@ interface Settings {
   store_address: string;
   store_phone: string;
   loyalty_points_rate: number;
+  loyalty_redeem_rate: number;
   low_stock_threshold: number;
   usd_to_lbp_rate: number;
+  delivery_fee: number;
 }
 
 export function useSettings() {
@@ -46,8 +48,10 @@ export function useSettings() {
         store_address: settingsObj.store_address || '',
         store_phone: settingsObj.store_phone || '',
         loyalty_points_rate: parseFloat(settingsObj.loyalty_points_rate || '1.0'),
+        loyalty_redeem_rate: parseFloat(settingsObj.loyalty_redeem_rate || '100'),
         low_stock_threshold: parseInt(settingsObj.low_stock_threshold || '10'),
-        usd_to_lbp_rate: parseFloat(settingsObj.usd_to_lbp_rate || '90000')
+        usd_to_lbp_rate: parseFloat(settingsObj.usd_to_lbp_rate || '90000'),
+        delivery_fee: parseFloat(settingsObj.delivery_fee || '0')
       };
 
       setSettings(parsedSettings);

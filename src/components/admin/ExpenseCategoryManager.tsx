@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { ExpenseCategory } from '../../types';
+import { useConfirm } from '../ui/ConfirmDialog';
+import { Card, Button, IconButton, Field, Input, Modal, TableShell, Thead, Th, Td, EmptyState } from './ui/Kit';
 
 interface ExpenseCategoryManagerProps {
   categories: ExpenseCategory[];
@@ -17,6 +19,7 @@ export function ExpenseCategoryManager({
   onDelete,
 }: ExpenseCategoryManagerProps) {
   const { t, dir } = useLanguage();
+  const confirm = useConfirm();
   const [showForm, setShowForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
   const [nameEn, setNameEn] = useState('');
@@ -74,7 +77,7 @@ export function ExpenseCategoryManager({
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('financial.deleteCategoryConfirm'))) {
+    if (!(await confirm({ message: t('financial.deleteCategoryConfirm'), danger: true }))) {
       return;
     }
 
@@ -96,143 +99,73 @@ export function ExpenseCategoryManager({
   return (
     <div className="space-y-4" dir={dir}>
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          {t('financial.categories')}
-        </h3>
-        <button
+        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{t('financial.categories')}</h3>
+        <Button
+          icon={Plus}
           onClick={() => {
             resetForm();
             setShowForm(true);
           }}
-          className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors"
         >
-          <Plus size={16} />
           {t('financial.createCategory')}
-        </button>
+        </Button>
       </div>
 
-      {showForm && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100">
-              {editingCategory ? t('financial.editCategory') : t('financial.createCategory')}
-            </h4>
-            <button
-              onClick={resetForm}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('financial.categoryNameEn')}
-              </label>
-              <input
-                type="text"
-                value={nameEn}
-                onChange={(e) => setNameEn(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('financial.categoryNameAr')}
-              </label>
-              <input
-                type="text"
-                value={nameAr}
-                onChange={(e) => setNameAr(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                dir="rtl"
-                required
-              />
-            </div>
-
-            {error && (
-              <div className="text-red-600 dark:text-red-400 text-sm">{error}</div>
-            )}
-
-            <div className="flex gap-2 justify-end">
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50"
-              >
-                {loading ? t('common.loading') : t('common.save')}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      {error && !showForm && <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>}
 
       {categories.length === 0 ? (
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          {t('financial.noCategories')}
-        </div>
+        <EmptyState title={t('financial.noCategories')} />
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    {t('financial.categoryName')} (EN)
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    {t('financial.categoryName')} (AR)
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    {t('common.actions')}
-                  </th>
+        <Card padded={false}>
+          <TableShell>
+            <Thead>
+              <Th>{t('financial.categoryName')} (EN)</Th>
+              <Th>{t('financial.categoryName')} (AR)</Th>
+              <Th align="end">{t('common.actions')}</Th>
+            </Thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              {categories.map((category) => (
+                <tr key={category.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+                  <Td className="text-gray-900 dark:text-gray-100">{category.name_en}</Td>
+                  <Td className="text-gray-900 dark:text-gray-100" align="start">
+                    <span dir="rtl">{category.name_ar}</span>
+                  </Td>
+                  <Td align="end">
+                    <div className="flex items-center justify-end gap-1">
+                      <IconButton icon={Pencil} label={t('common.edit')} tone="primary" onClick={() => handleEdit(category)} />
+                      <IconButton icon={Trash2} label={t('common.delete')} tone="danger" onClick={() => handleDelete(category.id)} />
+                    </div>
+                  </Td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {categories.map((category) => (
-                  <tr key={category.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
-                      {category.name_en}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" dir="rtl">
-                      {category.name_ar}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleEdit(category)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                          title={t('common.edit')}
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(category.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                          title={t('common.delete')}
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              ))}
+            </tbody>
+          </TableShell>
+        </Card>
       )}
+
+      <Modal
+        open={showForm}
+        onClose={resetForm}
+        title={editingCategory ? t('financial.editCategory') : t('financial.createCategory')}
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Field label={t('financial.categoryNameEn')} required>
+            <Input type="text" value={nameEn} onChange={(e) => setNameEn(e.target.value)} required />
+          </Field>
+
+          <Field label={t('financial.categoryNameAr')} required>
+            <Input type="text" value={nameAr} onChange={(e) => setNameAr(e.target.value)} dir="rtl" required />
+          </Field>
+
+          {error && <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>}
+
+          <div className="flex gap-3 justify-end pt-2">
+            <Button type="button" variant="secondary" onClick={resetForm}>{t('common.cancel')}</Button>
+            <Button type="submit" loading={loading}>{t('common.save')}</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
-

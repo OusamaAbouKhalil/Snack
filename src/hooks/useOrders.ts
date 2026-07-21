@@ -1,58 +1,67 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Order, OrderItem, CartItem } from '../types';
+import { CartItem } from '../types';
+
+export interface CreateOrderInput {
+  items: CartItem[];
+  customerName: string;
+  paymentMethod?: string;
+  customerId?: string | null;
+  orderType?: 'pickup' | 'delivery';
+  deliveryFee?: number | null;
+  deliveryAddress?: string | null;
+  deliveryLat?: number | null;
+  deliveryLng?: number | null;
+  customerPhone?: string | null;
+  notes?: string | null;
+  source?: 'pos' | 'online';
+  redeemPoints?: number;
+}
+
+export interface CreatedOrder {
+  id: string;
+  order_number: string;
+  total_amount: number;
+  delivery_fee: number;
+  delivery_zone?: string | null;
+  discount: number;
+  redeemed_points: number;
+  order_type: string;
+  status: string;
+}
 
 export function useOrders() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createOrder = async (
-    cartItems: CartItem[],
-    customerName: string,
-    paymentMethod: string
-  ): Promise<string | null> => {
+  // All order creation (POS + online + guest) goes through the create_order
+  // RPC: prices are computed server-side, the order number is generated once.
+  const createOrder = async (input: CreateOrderInput): Promise<CreatedOrder | null> => {
+    setLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
-      setError(null);
+      const { data, error } = await supabase.rpc('create_order', {
+        p_items: input.items.map((i) => ({
+          product_id: i.product.id,
+          quantity: i.quantity,
+        })),
+        p_customer_name: input.customerName,
+        p_payment_method: input.paymentMethod || 'cash',
+        p_customer_id: input.customerId ?? null,
+        p_order_type: input.orderType || 'pickup',
+        p_delivery_fee: input.deliveryFee ?? null,
+        p_delivery_address: input.deliveryAddress ?? null,
+        p_delivery_lat: input.deliveryLat ?? null,
+        p_delivery_lng: input.deliveryLng ?? null,
+        p_customer_phone: input.customerPhone ?? null,
+        p_notes: input.notes ?? null,
+        p_source: input.source || 'online',
+        p_redeem_points: input.redeemPoints ?? 0,
+      });
 
-      // Generate order number
-      const orderNumber = `ORD-${Date.now()}`;
-      const totalAmount = cartItems.reduce(
-        (sum, item) => sum + item.product.price * item.quantity,
-        0
-      );
-
-      // Create order
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          order_number: orderNumber,
-          customer_name: customerName,
-          total_amount: totalAmount,
-          payment_method: paymentMethod,
-          status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      // Create order items
-      const orderItems = cartItems.map(item => ({
-        order_id: orderData.id,
-        product_id: item.product.id,
-        quantity: item.quantity,
-        unit_price: item.product.price,
-        total_price: item.product.price * item.quantity
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
-
-      return orderData.id;
+      if (error) throw error;
+      return data as CreatedOrder;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create order');
       return null;
@@ -63,20 +72,12 @@ export function useOrders() {
 
   const getOrderWithItems = async (orderId: string) => {
     try {
-      // Fetch order and items in parallel for faster loading
       const [orderResult, itemsResult] = await Promise.all([
-        supabase
-          .from('orders')
-          .select('*')
-          .eq('id', orderId)
-          .single(),
+        supabase.from('orders').select('*').eq('id', orderId).single(),
         supabase
           .from('order_items')
-          .select(`
-            *,
-            products (*)
-          `)
-          .eq('order_id', orderId)
+          .select('*, products (name)')
+          .eq('order_id', orderId),
       ]);
 
       if (orderResult.error) throw orderResult.error;

@@ -9,6 +9,7 @@ interface DashboardStats {
   totalCustomers: number;
   lowStockItems: number;
   totalItemsOrdered: number;
+  onlineOrdersToday: number;
   recentOrders: Array<{
     id: string;
     order_number: string;
@@ -26,6 +27,7 @@ interface DashboardStats {
   dailyItemsOrdered: Array<{ date: string; quantity: number }>;
   topProductsByDate: Array<{ id: string; name: string; total_sold: number }>;
   dailySales: Array<{ date: string; total: number }>;
+  newCustomersDaily: Array<{ date: string; count: number; cumulative: number }>;
 }
 
 export function useDashboardStats(initialDays: number = 7) {
@@ -36,11 +38,13 @@ export function useDashboardStats(initialDays: number = 7) {
     totalCustomers: 0,
     lowStockItems: 0,
     totalItemsOrdered: 0,
+    onlineOrdersToday: 0,
     recentOrders: [],
     topProducts: [],
     dailyItemsOrdered: [],
     topProductsByDate: [],
-    dailySales: []
+    dailySales: [],
+    newCustomersDaily: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,9 +61,10 @@ export function useDashboardStats(initialDays: number = 7) {
       // Parallelize independent queries
       const [
         { data: todayOrders, error: todayError },
-        { data: pendingOrders, error: pendingError },
-        { data: customers, error: customersError },
-        { data: inventory, error: inventoryError }
+        { count: pendingCount, error: pendingError },
+        { count: customersCount, error: customersError },
+        { data: inventory, error: inventoryError },
+        { count: onlineTodayCount, error: onlineTodayError }
       ] = await Promise.all([
         supabase
           .from('orders')
@@ -68,20 +73,26 @@ export function useDashboardStats(initialDays: number = 7) {
           .gte('created_at', today),
         supabase
           .from('orders')
-          .select('id')
+          .select('id', { count: 'exact', head: true })
           .eq('status', 'pending'),
         supabase
           .from('customers')
-          .select('id'),
+          .select('id', { count: 'exact', head: true }),
         supabase
           .from('inventory')
-          .select('stock_quantity, min_stock_level')
+          .select('stock_quantity, min_stock_level'),
+        supabase
+          .from('orders')
+          .select('id', { count: 'exact', head: true })
+          .eq('source', 'online')
+          .gte('created_at', today)
       ]);
 
       if (todayError) throw todayError;
       if (pendingError) throw pendingError;
       if (customersError) throw customersError;
       if (inventoryError) throw inventoryError;
+      if (onlineTodayError) throw onlineTodayError;
 
       const todaySales = todayOrders?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
 
@@ -101,7 +112,8 @@ export function useDashboardStats(initialDays: number = 7) {
           .limit(5),
         supabase
           .from('order_items')
-          .select('quantity')
+          .select('quantity, orders!inner(status)')
+          .neq('orders.status', 'cancelled')
           .gte('created_at', today)
       ]);
 
@@ -110,23 +122,17 @@ export function useDashboardStats(initialDays: number = 7) {
 
       const totalItemsOrdered = itemsOrderedToday?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
 
-      // Daily items and sales in parallel (these can share the date range)
-      const [
-        { data: dailyItemsData, error: dailyItemsError },
-        { data: dailySalesData, error: dailySalesError }
-      ] = await Promise.all([
-        supabase
-          .from('order_items')
-          .select('quantity, created_at')
-          .gte('created_at', daysAgo),
-        supabase
-          .from('order_items')
-          .select('total_price, created_at')
-          .gte('created_at', daysAgo)
-      ]);
+      // One range fetch covers daily items, daily sales, and top products.
+      // Cancelled orders keep their items now, so exclude them here.
+      const { data: rangeItems, error: rangeError } = await supabase
+        .from('order_items')
+        .select('product_id, quantity, total_price, created_at, orders!inner(status)')
+        .neq('orders.status', 'cancelled')
+        .gte('created_at', daysAgo);
 
-      if (dailyItemsError) throw dailyItemsError;
-      if (dailySalesError) throw dailySalesError;
+      if (rangeError) throw rangeError;
+      const dailyItemsData = rangeItems;
+      const dailySalesData = rangeItems;
 
       const dailyItemsOrdered = Array.from({ length: daysFilter }, (_, i) => {
         const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
@@ -146,16 +152,37 @@ export function useDashboardStats(initialDays: number = 7) {
         return { date: dateStr, total };
       }).reverse();
 
-      // Optimize top products query - fetch once and process in memory
-      const { data: orderItemsData, error: orderItemsError } = await supabase
-        .from('order_items')
-        .select('product_id, quantity, created_at')
-        .gte('created_at', daysAgo);
+      // Customer growth: new signups per day over the range, plus a running
+      // total starting from however many existed before the range began.
+      const [
+        { data: newCustomersInRange, error: newCustomersError },
+        { count: customersBeforeRange, error: beforeRangeError }
+      ] = await Promise.all([
+        supabase
+          .from('customers')
+          .select('created_at')
+          .gte('created_at', daysAgo),
+        supabase
+          .from('customers')
+          .select('id', { count: 'exact', head: true })
+          .lt('created_at', daysAgo)
+      ]);
 
-      if (orderItemsError) throw orderItemsError;
+      if (newCustomersError) throw newCustomersError;
+      if (beforeRangeError) throw beforeRangeError;
+
+      let runningTotal = customersBeforeRange || 0;
+      const newCustomersDaily = Array.from({ length: daysFilter }, (_, i) => {
+        const date = new Date(Date.now() - (daysFilter - 1 - i) * 24 * 60 * 60 * 1000);
+        const dateStr = date.toISOString().split('T')[0];
+        const count = newCustomersInRange
+          ?.filter(c => c.created_at.toString().startsWith(dateStr)).length || 0;
+        runningTotal += count;
+        return { date: dateStr, count, cumulative: runningTotal };
+      });
 
       // Process in memory instead of multiple queries
-      const productQuantities = orderItemsData?.reduce((acc, item) => {
+      const productQuantities = rangeItems?.reduce((acc, item) => {
         acc[item.product_id] = (acc[item.product_id] || 0) + (item.quantity || 0);
         return acc;
       }, {} as Record<string, number>) || {};
@@ -201,15 +228,17 @@ export function useDashboardStats(initialDays: number = 7) {
       setStats({
         todaySales,
         todayOrders: todayOrders?.length || 0,
-        pendingOrders: pendingOrders?.length || 0,
-        totalCustomers: customers?.length || 0,
+        pendingOrders: pendingCount || 0,
+        totalCustomers: customersCount || 0,
         lowStockItems,
         totalItemsOrdered,
+        onlineOrdersToday: onlineTodayCount || 0,
         recentOrders: recentOrders || [],
         topProducts: sortedTopProducts,
         dailyItemsOrdered,
         topProductsByDate: sortedTopProductsByDate,
-        dailySales
+        dailySales,
+        newCustomersDaily
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch dashboard stats');

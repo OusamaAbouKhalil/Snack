@@ -1,17 +1,67 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Edit, Trash2, Search, Package, Upload, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Package, Upload, X, Check, Power, PowerOff, CheckSquare, Square } from 'lucide-react';
 import { useAdminProducts } from '../../hooks/useAdminProducts';
 import { useProductManagement } from '../../hooks/useProductManagement';
 import { Product } from '../../types';
+import { supabase } from '../../lib/supabase';
+import { useToast } from '../ui/Toast';
+import { useConfirm } from '../ui/ConfirmDialog';
+import { Card, PageHeader, Button, Badge, Field, Input, Textarea, Select, Switch, Modal, Spinner } from './ui/Kit';
+
+const IMAGE_BUCKET = 'product-images';
+const PUBLIC_PREFIX = `/storage/v1/object/public/${IMAGE_BUCKET}/`;
+
+// Downscale to max 800px and encode as WebP (JPEG fallback) so uploads stay small.
+async function resizeImage(file: File): Promise<{ blob: Blob; ext: string }> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 800 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const toBlob = (type: string, q: number) =>
+      new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, q));
+    const webp = await toBlob('image/webp', 0.75);
+    if (webp && webp.type === 'image/webp') return { blob: webp, ext: 'webp' };
+    const jpeg = await toBlob('image/jpeg', 0.8);
+    if (jpeg) return { blob: jpeg, ext: 'jpg' };
+  } catch {
+    // fall through to original file
+  }
+  return { blob: file, ext: file.name.split('.').pop() || 'jpg' };
+}
+
+async function uploadProductImage(file: File): Promise<string> {
+  const { blob, ext } = await resizeImage(file);
+  const path = `products/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage
+    .from(IMAGE_BUCKET)
+    .upload(path, blob, { cacheControl: '31536000', contentType: blob.type });
+  if (error) throw error;
+  return supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
+// Best-effort cleanup of a replaced/removed image that lives in our bucket.
+function deleteStorageImage(url: string) {
+  const i = url.indexOf(PUBLIC_PREFIX);
+  if (i === -1) return;
+  const path = decodeURIComponent(url.slice(i + PUBLIC_PREFIX.length));
+  supabase.storage.from(IMAGE_BUCKET).remove([path]).catch(() => {});
+}
 
 export function ProductManagement() {
   const { products, categories, loading, error, refetch } = useAdminProducts();
   const { createProduct, updateProduct, deleteProduct, loading: actionLoading } = useProductManagement();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -34,13 +84,9 @@ export function ProductManagement() {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setImagePreview(result);
-        setFormData({ ...formData, image_url: result });
-      };
-      reader.readAsDataURL(file);
+      // Preview stays local only — the file is uploaded to Storage on save,
+      // and only its URL is stored in the database (never base64).
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
@@ -52,9 +98,24 @@ export function ProductManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    let imageUrl = formData.image_url;
+    if (imageFile) {
+      try {
+        imageUrl = await uploadProductImage(imageFile);
+      } catch (err: any) {
+        toast.error(`Image upload failed: ${err.message || err}`);
+        return;
+      }
+    }
+    if (imageUrl.startsWith('data:')) {
+      toast.error('Base64 images are not allowed — upload a file or paste an image URL.');
+      return;
+    }
+
     const productData = {
       ...formData,
+      image_url: imageUrl,
       price: parseFloat(formData.price)
     };
 
@@ -63,6 +124,10 @@ export function ProductManagement() {
       success = await updateProduct(editingProduct.id, productData);
     } else {
       success = await createProduct(productData);
+    }
+
+    if (success && editingProduct?.image_url && editingProduct.image_url !== imageUrl) {
+      deleteStorageImage(editingProduct.image_url);
     }
 
     if (success) {
@@ -78,23 +143,58 @@ export function ProductManagement() {
     setEditingProduct(product);
     setFormData({
       name: product.name,
-      description: product.description,
+      description: product.description || '',
       price: product.price.toString(),
       category_id: product.category_id || '',
-      image_url: product.image_url,
+      image_url: product.image_url || '',
       is_available: product.is_available
     });
-    setImagePreview(product.image_url);
+    setImagePreview(product.image_url || '');
     setShowForm(true);
   };
 
   const handleDelete = async (productId: string) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
+    if (await confirm({ message: 'Are you sure you want to delete this product?', danger: true })) {
       const success = await deleteProduct(productId);
       if (success && products.length > 0) {
         refetch();
       }
     }
+  };
+
+  const toggleSelected = (productId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(productId)) next.delete(productId);
+      else next.add(productId);
+      return next;
+    });
+  };
+
+  const toggleSelectAllVisible = () => {
+    setSelectedIds((prev) =>
+      filteredProducts.every((p) => prev.has(p.id)) ? new Set() : new Set(filteredProducts.map((p) => p.id))
+    );
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const bulkSetAvailable = async (available: boolean) => {
+    setBulkLoading(true);
+    await Promise.all([...selectedIds].map((id) => updateProduct(id, { is_available: available })));
+    setBulkLoading(false);
+    clearSelection();
+    refetch();
+  };
+
+  const bulkDelete = async () => {
+    const count = selectedIds.size;
+    if (!(await confirm({ message: `Delete ${count} selected product${count === 1 ? '' : 's'}? This cannot be undone.`, danger: true }))) return;
+    setBulkLoading(true);
+    await Promise.all([...selectedIds].map((id) => deleteProduct(id)));
+    setBulkLoading(false);
+    clearSelection();
+    refetch();
   };
 
   const resetForm = () => {
@@ -114,280 +214,244 @@ export function ProductManagement() {
 
   // Only show full loading if we have no products at all
   if (loading && products.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-        <p className="text-gray-600 dark:text-gray-400">Loading products...</p>
-      </div>
-    );
+    return <Spinner />;
   }
 
   return (
     <div className="space-y-6">
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg flex items-center justify-between transition-colors duration-300">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">⚠️</span>
-            <span>{error}</span>
-          </div>
-          <button
-            onClick={() => refetch()}
-            className="bg-red-500 dark:bg-red-600 hover:bg-red-600 dark:hover:bg-red-700 text-white px-4 py-1 rounded text-sm transition-colors"
-          >
-            Retry
-          </button>
-        </div>
+        <Card className="!bg-red-50 dark:!bg-red-900/30 !border-red-200 dark:!border-red-800 flex items-center justify-between">
+          <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
+          <Button variant="danger" size="sm" onClick={() => refetch()}>Retry</Button>
+        </Card>
       )}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Product Management</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-1">Manage your menu items and products</p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-        >
-          <Plus size={20} />
-          Add Product
-        </button>
-      </div>
+
+      <PageHeader
+        title="Product Management"
+        subtitle="Manage your menu items and products"
+        actions={<Button icon={Plus} onClick={() => setShowForm(true)}>Add Product</Button>}
+      />
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
-        <input
+        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
+        <Input
           type="text"
           placeholder="Search products..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
+          className="ps-10"
         />
       </div>
 
+      {/* Selection / bulk actions */}
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          onClick={toggleSelectAllVisible}
+          className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+        >
+          {filteredProducts.length > 0 && filteredProducts.every((p) => selectedIds.has(p.id)) ? (
+            <CheckSquare size={17} />
+          ) : (
+            <Square size={17} />
+          )}
+          Select all
+        </button>
+
+        {selectedIds.size > 0 && (
+          <div className="flex flex-wrap items-center gap-2 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl px-3 py-2">
+            <span className="text-sm font-semibold text-primary-700 dark:text-primary-300">{selectedIds.size} selected</span>
+            <Button size="sm" variant="secondary" icon={Power} loading={bulkLoading} onClick={() => bulkSetAvailable(true)}>Mark Available</Button>
+            <Button size="sm" variant="secondary" icon={PowerOff} loading={bulkLoading} onClick={() => bulkSetAvailable(false)}>Mark Unavailable</Button>
+            <Button size="sm" variant="danger" icon={Trash2} loading={bulkLoading} onClick={bulkDelete}>Delete</Button>
+            <Button size="sm" variant="ghost" onClick={clearSelection}>Clear</Button>
+          </div>
+        )}
+      </div>
+
       {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredProducts.map((product) => (
-          <div key={product.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-300">
-            <div className="aspect-video bg-gradient-to-br from-primary-100 to-yellow-100 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center transition-colors duration-300">
-              {product.image_url ? (
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Package className="text-gray-400 dark:text-gray-500" size={48} />
-              )}
-            </div>
-            
-            <div className="p-4">
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">{product.name}</h3>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium transition-colors duration-300 ${
-                  product.is_available 
-                    ? 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300' 
-                    : 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300'
-                }`}>
-                  {product.is_available ? 'Available' : 'Unavailable'}
-                </span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        {filteredProducts.map((product) => {
+          const selected = selectedIds.has(product.id);
+          return (
+            <Card key={product.id} padded={false} className={`overflow-hidden relative ${selected ? 'ring-2 ring-primary-500' : ''}`}>
+              <button
+                onClick={() => toggleSelected(product.id)}
+                aria-label={selected ? `Deselect ${product.name}` : `Select ${product.name}`}
+                className={`absolute top-2.5 start-2.5 z-10 w-6 h-6 rounded-md flex items-center justify-center transition-colors ${
+                  selected
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-white/90 dark:bg-gray-900/80 text-transparent hover:text-gray-400 border border-gray-300 dark:border-gray-600'
+                }`}
+              >
+                <Check size={14} />
+              </button>
+
+              <div className="aspect-video bg-gradient-to-br from-primary-100 to-cream-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
+                {product.image_url ? (
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Package className="text-gray-400 dark:text-gray-500" size={40} />
+                )}
               </div>
-              
-              <p className="text-gray-600 dark:text-gray-300 text-sm mb-3 line-clamp-2">{product.description}</p>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-xl font-bold text-primary-600 dark:text-primary-400">
-                  ${product.price.toFixed(2)}
-                </span>
-                
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(product)}
-                    className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-lg transition-colors duration-200"
-                  >
-                    <Edit size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(product.id)}
-                    className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-lg transition-colors duration-200"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{product.name}</h3>
+                  <Badge tone={product.is_available ? 'success' : 'danger'}>
+                    {product.is_available ? 'Available' : 'Unavailable'}
+                  </Badge>
+                </div>
+
+                <p className="text-gray-600 dark:text-gray-300 text-sm mb-3 line-clamp-2">{product.description}</p>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-xl font-bold text-primary-600 dark:text-primary-400 tabular-nums">
+                    ${product.price.toFixed(2)}
+                  </span>
+
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handleEdit(product)}
+                      className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/40 rounded-lg transition-colors"
+                      aria-label={`Edit ${product.name}`}
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/40 rounded-lg transition-colors"
+                      aria-label={`Delete ${product.name}`}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        ))}
+            </Card>
+          );
+        })}
       </div>
 
       {/* Product Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transition-colors duration-300">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  {editingProduct ? 'Edit Product' : 'Add New Product'}
-                </h2>
+      <Modal open={showForm} onClose={resetForm} title={editingProduct ? 'Edit Product' : 'Add New Product'} maxWidth="max-w-2xl">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field label="Product Name" required>
+              <Input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+            </Field>
+
+            <Field label="Price" required>
+              <Input
+                type="number"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                required
+              />
+            </Field>
+          </div>
+
+          <Field label="Description">
+            <Textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              rows={3}
+            />
+          </Field>
+
+          <Field label="Category">
+            <Select
+              value={formData.category_id}
+              onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+            >
+              <option value="">Select a category</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+
+          {/* Image Upload */}
+          <Field label="Product Image">
+            {imagePreview ? (
+              <div className="relative">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-48 object-cover rounded-xl border border-gray-300 dark:border-gray-600"
+                />
                 <button
-                  onClick={resetForm}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-300"
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute top-2 end-2 bg-red-500 dark:bg-red-600 text-white p-1.5 rounded-full hover:bg-red-600 dark:hover:bg-red-700 transition-colors"
+                  aria-label="Remove image"
                 >
-                  <X size={20} />
+                  <X size={16} />
                 </button>
               </div>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Product Name
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
-                      required
-                    />
-                  </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center">
+                <Upload className="mx-auto mb-2 text-gray-400 dark:text-gray-500" size={30} />
+                <p className="text-gray-600 dark:text-gray-300 mb-2 text-sm">Upload product image</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label
+                  htmlFor="image-upload"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl font-semibold bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 text-sm cursor-pointer transition-colors"
+                >
+                  Choose Image
+                </label>
+              </div>
+            )}
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Price
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Category
-                  </label>
-                  <select
-                    value={formData.category_id}
-                    onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Image Upload */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Product Image
-                  </label>
-                  
-                  {imagePreview ? (
-                    <div className="relative">
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="w-full h-48 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
-                      />
-                      <button
-                        type="button"
-                        onClick={removeImage}
-                        className="absolute top-2 right-2 bg-red-500 dark:bg-red-600 text-white p-1 rounded-full hover:bg-red-600 dark:hover:bg-red-700 transition-colors"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center transition-colors duration-300">
-                      <Upload className="mx-auto mb-2 text-gray-400 dark:text-gray-500" size={32} />
-                      <p className="text-gray-600 dark:text-gray-300 mb-2">Upload product image</p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="hidden"
-                        id="image-upload"
-                      />
-                      <label
-                        htmlFor="image-upload"
-                        className="bg-primary-500 dark:bg-primary-600 hover:bg-primary-600 dark:hover:bg-primary-700 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors"
-                      >
-                        Choose Image
-                      </label>
-                    </div>
-                  )}
-                  
-                  <div className="mt-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Or enter image URL
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.image_url}
-                      onChange={(e) => {
-                        setFormData({ ...formData, image_url: e.target.value });
-                        setImagePreview(e.target.value);
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
-                      placeholder="https://example.com/image.jpg"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="is_available"
-                    checked={formData.is_available}
-                    onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })}
-                    className="rounded border-gray-300 dark:border-gray-600 text-primary-600 dark:text-primary-400 focus:ring-primary-500 dark:focus:ring-primary-600 bg-white dark:bg-gray-700"
-                  />
-                  <label htmlFor="is_available" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                    Available for sale
-                  </label>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={actionLoading}
-                    className="flex-1 px-4 py-2 bg-primary-500 dark:bg-primary-600 text-white rounded-lg hover:bg-primary-600 dark:hover:bg-primary-700 transition-colors disabled:opacity-50"
-                  >
-                    {actionLoading ? 'Saving...' : (editingProduct ? 'Update' : 'Create')}
-                  </button>
-                </div>
-              </form>
+            <div className="mt-3">
+              <Field label="Or enter image URL">
+                <Input
+                  type="url"
+                  value={formData.image_url}
+                  onChange={(e) => {
+                    setFormData({ ...formData, image_url: e.target.value });
+                    setImagePreview(e.target.value);
+                  }}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </Field>
             </div>
+          </Field>
+
+          <Switch
+            checked={formData.is_available}
+            onChange={(v) => setFormData({ ...formData, is_available: v })}
+            label="Available for sale"
+          />
+
+          <div className="flex gap-3 pt-4">
+            <Button type="button" variant="secondary" onClick={resetForm} className="flex-1">
+              Cancel
+            </Button>
+            <Button type="submit" loading={actionLoading} className="flex-1">
+              {editingProduct ? 'Update' : 'Create'}
+            </Button>
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
     </div>
   );
 }

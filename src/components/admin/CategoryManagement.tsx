@@ -1,25 +1,30 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, FolderOpen } from 'lucide-react';
+import { Plus, Edit, Trash2, FolderOpen, Power } from 'lucide-react';
 import { useProducts } from '../../hooks/useProducts';
 import { useCategoryManagement } from '../../hooks/useCategoryManagement';
 import { Category } from '../../types';
+import { useConfirm } from '../ui/ConfirmDialog';
+import { Card, PageHeader, Button, IconButton, Badge, Field, Input, Switch, Modal, EmptyState, Spinner } from './ui/Kit';
 
 export function CategoryManagement() {
   const { categories, loading, refetch } = useProducts();
   const { createCategory, updateCategory, deleteCategory, loading: actionLoading } = useCategoryManagement();
+  const confirm = useConfirm();
   const [showForm, setShowForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    display_order: ''
+    display_order: '',
+    is_available: true
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const categoryData = {
       name: formData.name,
-      display_order: parseInt(formData.display_order) || 0
+      display_order: parseInt(formData.display_order) || 0,
+      is_available: formData.is_available
     };
 
     let success = false;
@@ -32,7 +37,7 @@ export function CategoryManagement() {
     if (success) {
       setShowForm(false);
       setEditingCategory(null);
-      setFormData({ name: '', display_order: '' });
+      setFormData({ name: '', display_order: '', is_available: true });
       refetch();
     }
   };
@@ -41,13 +46,19 @@ export function CategoryManagement() {
     setEditingCategory(category);
     setFormData({
       name: category.name,
-      display_order: category.display_order.toString()
+      display_order: category.display_order.toString(),
+      is_available: category.is_available
     });
     setShowForm(true);
   };
 
+  const toggleAvailable = async (category: Category) => {
+    const success = await updateCategory(category.id, { is_available: !category.is_available });
+    if (success) refetch();
+  };
+
   const handleDelete = async (categoryId: string) => {
-    if (window.confirm('Are you sure you want to delete this category? This will also remove all products in this category.')) {
+    if (await confirm({ message: 'Are you sure you want to delete this category? This will also remove all products in this category.', danger: true })) {
       const success = await deleteCategory(categoryId);
       if (success) {
         refetch();
@@ -55,41 +66,30 @@ export function CategoryManagement() {
     }
   };
 
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingCategory(null);
+    setFormData({ name: '', display_order: '', is_available: true });
+  };
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-      </div>
-    );
+    return <Spinner />;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Category Management</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-1">Organize your products into categories</p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-        >
-          <Plus size={20} />
-          Add Category
-        </button>
-      </div>
+      <PageHeader
+        title="Category Management"
+        subtitle="Organize your products into categories"
+        actions={<Button icon={Plus} onClick={() => setShowForm(true)}>Add Category</Button>}
+      />
 
-      {/* Categories List */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+      <Card padded={false}>
         <div className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Categories</h2>
-          
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Categories</h2>
+
           {categories.length === 0 ? (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-              <FolderOpen size={48} className="mx-auto mb-4 opacity-50" />
-              <p>No categories found</p>
-              <p className="text-sm">Create your first category to get started</p>
-            </div>
+            <EmptyState icon={FolderOpen} title="No categories found" message="Create your first category to get started" />
           ) : (
             <div className="space-y-3">
               {categories
@@ -97,101 +97,85 @@ export function CategoryManagement() {
                 .map((category) => (
                   <div
                     key={category.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300"
+                    className={`flex items-center justify-between p-4 rounded-xl transition-colors ${
+                      category.is_available
+                        ? 'bg-gray-50 dark:bg-gray-900/40'
+                        : 'bg-gray-50/60 dark:bg-gray-900/20 border border-dashed border-gray-300 dark:border-gray-600 opacity-70'
+                    }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="bg-primary-100 dark:bg-primary-900/50 p-2 rounded-lg">
+                      <span className="bg-primary-100 dark:bg-primary-900/50 p-2 rounded-lg flex-shrink-0">
                         <FolderOpen className="text-primary-600 dark:text-primary-400" size={20} />
-                      </div>
+                      </span>
                       <div>
-                        <h3 className="font-medium text-gray-900 dark:text-gray-100">{category.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-gray-900 dark:text-gray-100">{category.name}</h3>
+                          <Badge tone={category.is_available ? 'success' : 'neutral'}>
+                            {category.is_available ? 'Visible' : 'Hidden'}
+                          </Badge>
+                        </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400">Display Order: {category.display_order}</p>
                       </div>
                     </div>
-                    
-                    <div className="flex gap-2">
+
+                    <div className="flex items-center gap-1">
                       <button
-                        onClick={() => handleEdit(category)}
-                        className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-lg transition-colors duration-200"
+                        onClick={() => toggleAvailable(category)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                          category.is_available
+                            ? 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            : 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+                        }`}
                       >
-                        <Edit size={16} />
+                        <Power size={14} />
+                        {category.is_available ? 'Hide from menu' : 'Show on menu'}
                       </button>
-                      <button
-                        onClick={() => handleDelete(category.id)}
-                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-lg transition-colors duration-200"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <IconButton icon={Edit} label={`Edit ${category.name}`} tone="primary" onClick={() => handleEdit(category)} />
+                      <IconButton icon={Trash2} label={`Delete ${category.name}`} tone="danger" onClick={() => handleDelete(category.id)} />
                     </div>
                   </div>
                 ))}
             </div>
           )}
         </div>
-      </div>
+      </Card>
 
-      {/* Category Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full transition-colors duration-300">
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                {editingCategory ? 'Edit Category' : 'Add New Category'}
-              </h2>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Category Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
-                    required
-                  />
-                </div>
+      <Modal open={showForm} onClose={closeForm} title={editingCategory ? 'Edit Category' : 'Add New Category'} maxWidth="max-w-md">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Field label="Category Name" required>
+            <Input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+            />
+          </Field>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Display Order
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.display_order}
-                    onChange={(e) => setFormData({ ...formData, display_order: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
-                    placeholder="0"
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Lower numbers appear first</p>
-                </div>
+          <Field label="Display Order" helper="Lower numbers appear first">
+            <Input
+              type="number"
+              value={formData.display_order}
+              onChange={(e) => setFormData({ ...formData, display_order: e.target.value })}
+              placeholder="0"
+            />
+          </Field>
 
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowForm(false);
-                      setEditingCategory(null);
-                      setFormData({ name: '', display_order: '' });
-                    }}
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={actionLoading}
-                    className="flex-1 px-4 py-2 bg-primary-500 dark:bg-primary-600 text-white rounded-lg hover:bg-primary-600 dark:hover:bg-primary-700 transition-colors disabled:opacity-50"
-                  >
-                    {actionLoading ? 'Saving...' : (editingCategory ? 'Update' : 'Create')}
-                  </button>
-                </div>
-              </form>
-            </div>
+          <Switch
+            checked={formData.is_available}
+            onChange={(v) => setFormData({ ...formData, is_available: v })}
+            label="Visible on the storefront menu"
+          />
+
+          <div className="flex gap-3 pt-4">
+            <Button type="button" variant="secondary" onClick={closeForm} className="flex-1">
+              Cancel
+            </Button>
+            <Button type="submit" loading={actionLoading} className="flex-1">
+              {editingCategory ? 'Update' : 'Create'}
+            </Button>
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
     </div>
   );
 }

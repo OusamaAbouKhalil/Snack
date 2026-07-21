@@ -1,10 +1,35 @@
-import React, { useState } from 'react';
-import { Save, Percent, DollarSign, Store, Bell, AlertCircle, TrendingUp } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Save, Percent, DollarSign, Store, Bell, AlertCircle, TrendingUp, Clock } from 'lucide-react';
 import { useSettings } from '../../hooks/useSettings';
+import { useBusinessHours, BusinessHoursRow } from '../../hooks/useBusinessHours';
+import { useToast } from '../ui/Toast';
+import { Card, PageHeader, Button, Field, Input, Select, Textarea, Switch, Spinner } from './ui/Kit';
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export function SettingsPanel() {
   const { settings, loading, error, updateSettings } = useSettings();
+  const { hours, loading: hoursLoading, saveHours } = useBusinessHours();
+  const toast = useToast();
   const [saving, setSaving] = useState(false);
+  const [hoursDraft, setHoursDraft] = useState<BusinessHoursRow[]>([]);
+  const [savingHours, setSavingHours] = useState(false);
+
+  useEffect(() => {
+    if (hours.length > 0) setHoursDraft(hours);
+  }, [hours]);
+
+  const updateDay = (day: number, patch: Partial<BusinessHoursRow>) => {
+    setHoursDraft((prev) => prev.map((h) => (h.day_of_week === day ? { ...h, ...patch } : h)));
+  };
+
+  const handleSaveHours = async () => {
+    setSavingHours(true);
+    const { error } = await saveHours(hoursDraft);
+    setSavingHours(false);
+    if (error) toast.error(error.message);
+    else toast.success('Business hours updated');
+  };
   const [formData, setFormData] = useState({
     tax_rate: settings?.tax_rate?.toString() || '11',
     currency: settings?.currency || 'LBP',
@@ -13,7 +38,8 @@ export function SettingsPanel() {
     store_phone: settings?.store_phone || '',
     loyalty_points_rate: settings?.loyalty_points_rate?.toString() || '1',
     low_stock_threshold: settings?.low_stock_threshold?.toString() || '10',
-    usd_to_lbp_rate: settings?.usd_to_lbp_rate?.toString() || '90000'
+    usd_to_lbp_rate: settings?.usd_to_lbp_rate?.toString() || '90000',
+    delivery_fee: settings?.delivery_fee?.toString() || '0'
   });
 
   // Update form data when settings load
@@ -27,7 +53,8 @@ export function SettingsPanel() {
         store_phone: settings.store_phone,
         loyalty_points_rate: settings.loyalty_points_rate.toString(),
         low_stock_threshold: settings.low_stock_threshold.toString(),
-        usd_to_lbp_rate: settings.usd_to_lbp_rate.toString()
+        usd_to_lbp_rate: settings.usd_to_lbp_rate.toString(),
+        delivery_fee: settings.delivery_fee.toString()
       });
     }
   }, [settings]);
@@ -35,7 +62,7 @@ export function SettingsPanel() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    
+
     const settingsData = {
       tax_rate: parseFloat(formData.tax_rate),
       currency: formData.currency,
@@ -44,30 +71,25 @@ export function SettingsPanel() {
       store_phone: formData.store_phone,
       loyalty_points_rate: parseFloat(formData.loyalty_points_rate),
       low_stock_threshold: parseInt(formData.low_stock_threshold),
-      usd_to_lbp_rate: parseFloat(formData.usd_to_lbp_rate)
+      usd_to_lbp_rate: parseFloat(formData.usd_to_lbp_rate),
+      delivery_fee: parseFloat(formData.delivery_fee)
     };
 
     const success = await updateSettings(settingsData);
     if (success) {
-      alert('Settings updated successfully!');
+      toast.success('Settings updated successfully!');
     } else {
-      alert('Failed to update settings. Please try again.');
+      toast.error('Failed to update settings. Please try again.');
     }
-    
+
     setSaving(false);
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-      </div>
-    );
-  }
+  if (loading) return <Spinner />;
 
   if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg flex items-center gap-2 transition-colors duration-300">
+      <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg flex items-center gap-2">
         <AlertCircle size={20} />
         Error: {error}
       </div>
@@ -76,182 +98,202 @@ export function SettingsPanel() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-300">Settings</h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-1 transition-colors duration-300">Configure your store settings and preferences</p>
-      </div>
+      <PageHeader title="Settings" subtitle="Configure your store settings and preferences" />
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Store Information */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-300">
+        <Card>
           <div className="flex items-center gap-3 mb-6">
-            <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-lg transition-colors duration-300">
-              <Store className="text-blue-600 dark:text-blue-400" size={20} />
-            </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300">Store Information</h2>
+            <span className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
+              <Store className="text-blue-600 dark:text-blue-400" size={19} />
+            </span>
+            <h2 className="font-bold text-gray-900 dark:text-gray-100">Store Information</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
-                Store Name
-              </label>
-              <input
-                type="text"
-                value={formData.store_name}
-                onChange={(e) => setFormData({ ...formData, store_name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
-                required
-              />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <Field label="Store Name">
+              <Input type="text" value={formData.store_name} onChange={(e) => setFormData({ ...formData, store_name: e.target.value })} required />
+            </Field>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                value={formData.store_phone}
-                onChange={(e) => setFormData({ ...formData, store_phone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
-              />
-            </div>
+            <Field label="Phone Number">
+              <Input type="tel" value={formData.store_phone} onChange={(e) => setFormData({ ...formData, store_phone: e.target.value })} />
+            </Field>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
-                Store Address
-              </label>
-              <textarea
-                value={formData.store_address}
-                onChange={(e) => setFormData({ ...formData, store_address: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
-                rows={3}
-              />
+              <Field label="Store Address">
+                <Textarea value={formData.store_address} onChange={(e) => setFormData({ ...formData, store_address: e.target.value })} rows={3} />
+              </Field>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Financial Settings */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-300">
+        <Card>
           <div className="flex items-center gap-3 mb-6">
-            <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-lg transition-colors duration-300">
-              <DollarSign className="text-green-600 dark:text-green-400" size={20} />
-            </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300">Financial Settings</h2>
+            <span className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/50 flex items-center justify-center flex-shrink-0">
+              <DollarSign className="text-green-600 dark:text-green-400" size={19} />
+            </span>
+            <h2 className="font-bold text-gray-900 dark:text-gray-100">Financial Settings</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
-                Tax Rate (%)
-              </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <Field label="Tax Rate (%)">
               <div className="relative">
-                <input
+                <Input
                   type="number"
                   step="0.01"
                   min="0"
                   max="100"
                   value={formData.tax_rate}
                   onChange={(e) => setFormData({ ...formData, tax_rate: e.target.value })}
-                  className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
+                  className="pe-8"
                   required
                 />
-                <Percent className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={16} />
+                <Percent className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" size={16} />
               </div>
-            </div>
+            </Field>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
-                Primary Currency
-              </label>
-              <select
-                value={formData.currency}
-                onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
-              >
+            <Field label="Primary Currency">
+              <Select value={formData.currency} onChange={(e) => setFormData({ ...formData, currency: e.target.value })}>
                 <option value="USD">USD ($)</option>
                 <option value="EUR">EUR (€)</option>
                 <option value="GBP">GBP (£)</option>
                 <option value="CAD">CAD (C$)</option>
                 <option value="LBP">LBP (LBP)</option>
-              </select>
-            </div>
+              </Select>
+            </Field>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
-                USD to LBP Rate
-              </label>
+            <Field label="USD to LBP Rate" helper="Exchange rate for dual currency display">
               <div className="relative">
-                <input
+                <Input
                   type="number"
                   min="0"
                   value={formData.usd_to_lbp_rate}
                   onChange={(e) => setFormData({ ...formData, usd_to_lbp_rate: e.target.value })}
-                  className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
+                  className="pe-8"
                   required
                 />
-                <TrendingUp className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={16} />
+                <TrendingUp className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" size={16} />
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-300">Exchange rate for dual currency display</p>
-            </div>
+            </Field>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
-                Loyalty Points Rate
-              </label>
-              <input
+            <Field label="Loyalty Points Rate" helper="Points per dollar spent">
+              <Input
                 type="number"
                 step="0.1"
                 min="0"
                 value={formData.loyalty_points_rate}
                 onChange={(e) => setFormData({ ...formData, loyalty_points_rate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
                 required
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-300">Points per dollar spent</p>
-            </div>
+            </Field>
+
+            <Field label="Delivery Fee ($)" helper="Flat fee charged on delivery orders">
+              <div className="relative">
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.delivery_fee}
+                  onChange={(e) => setFormData({ ...formData, delivery_fee: e.target.value })}
+                  className="pe-8"
+                  required
+                />
+                <DollarSign className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" size={16} />
+              </div>
+            </Field>
           </div>
-        </div>
+        </Card>
 
         {/* Inventory Settings */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-300">
+        <Card>
           <div className="flex items-center gap-3 mb-6">
-            <div className="bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-lg transition-colors duration-300">
-              <Bell className="text-yellow-600 dark:text-yellow-400" size={20} />
-            </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300">Inventory Settings</h2>
+            <span className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
+              <Bell className="text-amber-600 dark:text-amber-400" size={19} />
+            </span>
+            <h2 className="font-bold text-gray-900 dark:text-gray-100">Inventory Settings</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
-                Low Stock Threshold
-              </label>
-              <input
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <Field label="Low Stock Threshold" helper="Alert when stock falls below this number">
+              <Input
                 type="number"
                 min="0"
                 value={formData.low_stock_threshold}
                 onChange={(e) => setFormData({ ...formData, low_stock_threshold: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
                 required
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-300">Alert when stock falls below this number</p>
-            </div>
+            </Field>
           </div>
-        </div>
+        </Card>
 
         {/* Save Button */}
         <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={saving}
-            className="bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Save size={20} />
+          <Button type="submit" loading={saving} icon={Save} size="md">
             {saving ? 'Saving...' : 'Save Settings'}
-          </button>
+          </Button>
         </div>
       </form>
+
+      {/* Business Hours — separate save action, its own table */}
+      <Card>
+        <div className="flex items-center gap-3 mb-6">
+          <span className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center flex-shrink-0">
+            <Clock className="text-primary-600 dark:text-primary-400" size={19} />
+          </span>
+          <div>
+            <h2 className="font-bold text-gray-900 dark:text-gray-100">Business Hours</h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Online orders are blocked while closed — the POS still works for walk-ins.</p>
+          </div>
+        </div>
+
+        {hoursLoading ? (
+          <Spinner size={24} />
+        ) : (
+          <div className="space-y-2.5">
+            {hoursDraft.map((row) => (
+              <div
+                key={row.day_of_week}
+                className={`flex flex-wrap items-center gap-3 p-3 rounded-xl transition-colors ${
+                  row.is_closed ? 'bg-gray-50 dark:bg-gray-900/30 opacity-60' : 'bg-gray-50 dark:bg-gray-900/40'
+                }`}
+              >
+                <span className="w-28 flex-shrink-0 font-semibold text-sm text-gray-900 dark:text-gray-100">
+                  {DAY_NAMES[row.day_of_week]}
+                </span>
+                <input
+                  type="time"
+                  value={row.open_time.slice(0, 5)}
+                  disabled={row.is_closed}
+                  onChange={(e) => updateDay(row.day_of_week, { open_time: e.target.value })}
+                  className="px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg text-sm disabled:opacity-50"
+                />
+                <span className="text-gray-400 dark:text-gray-500 text-sm">to</span>
+                <input
+                  type="time"
+                  value={row.close_time.slice(0, 5)}
+                  disabled={row.is_closed}
+                  onChange={(e) => updateDay(row.day_of_week, { close_time: e.target.value })}
+                  className="px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg text-sm disabled:opacity-50"
+                />
+                <div className="ms-auto">
+                  <Switch
+                    checked={!row.is_closed}
+                    onChange={(v) => updateDay(row.day_of_week, { is_closed: !v })}
+                    label={row.is_closed ? 'Closed' : 'Open'}
+                  />
+                </div>
+              </div>
+            ))}
+
+            <div className="flex justify-end pt-2">
+              <Button icon={Save} loading={savingHours} onClick={handleSaveHours}>
+                {savingHours ? 'Saving...' : 'Save Hours'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

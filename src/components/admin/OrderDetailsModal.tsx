@@ -1,6 +1,8 @@
-import React from 'react';
-import { X, Calendar, CreditCard, User } from 'lucide-react';
+import { Calendar, CreditCard, User, Phone, MapPin, Truck, FileText, Printer } from 'lucide-react';
 import { useOrderDetails } from '../../hooks/useOrderDetails';
+import { useSettings } from '../../hooks/useSettings';
+import { printReceipt } from '../../lib/receipt';
+import { Modal, Button, Badge, Spinner } from './ui/Kit';
 
 interface OrderDetailsModalProps {
   orderId: string;
@@ -9,87 +11,165 @@ interface OrderDetailsModalProps {
 
 export function OrderDetailsModal({ orderId, onClose }: OrderDetailsModalProps) {
   const { order, items, loading } = useOrderDetails(orderId);
+  const { settings } = useSettings();
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-xl p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!order) {
+  if (!loading && !order) {
     return null;
   }
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Order Details</h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <X size={20} />
-            </button>
-          </div>
-        </div>
+  const deliveryFee = order ? Number(order.delivery_fee) || 0 : 0;
+  const hasMapLink = order && order.delivery_lat != null && order.delivery_lng != null;
 
-        <div className="p-6 space-y-6">
+  // Print the receipt (2 copies) from the already-loaded order details.
+  const handlePrintReceipt = () => {
+    if (!order) return;
+    printReceipt(
+      {
+        orderNumber: order.order_number,
+        customerName: order.customer_name,
+        paymentMethod: order.payment_method,
+        items: items.map((item) => ({
+          name: item.product_name,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+        })),
+        total: Number(order.total_amount),
+        deliveryFee,
+        orderType: order.order_type,
+        deliveryAddress: order.delivery_address,
+        notes: order.notes,
+        createdAt: order.created_at,
+      },
+      settings || {},
+      2
+    );
+  };
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="Order Details"
+      maxWidth="max-w-2xl"
+      footer={
+        order ? (
+          <Button icon={Printer} onClick={handlePrintReceipt} className="ms-auto">
+            Print receipt
+          </Button>
+        ) : undefined
+      }
+    >
+      {loading || !order ? (
+        <Spinner />
+      ) : (
+        <div className="space-y-6">
+          {order.source === 'online' && (
+            <Badge tone="info">Online</Badge>
+          )}
+
           {/* Order Info */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
-                <Calendar className="text-gray-500" size={16} />
-                <span className="text-sm font-medium text-gray-700">Order Number</span>
+                <Calendar className="text-gray-500 dark:text-gray-400" size={16} />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Order Number</span>
               </div>
-              <p className="font-semibold text-gray-900">#{order.order_number}</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">#{order.order_number}</p>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
-                <User className="text-gray-500" size={16} />
-                <span className="text-sm font-medium text-gray-700">Customer</span>
+                <User className="text-gray-500 dark:text-gray-400" size={16} />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Customer</span>
               </div>
-              <p className="font-semibold text-gray-900">{order.customer_name || 'Walk-in Customer'}</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">{order.customer_name || 'Walk-in Customer'}</p>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
-                <CreditCard className="text-gray-500" size={16} />
-                <span className="text-sm font-medium text-gray-700">Payment Method</span>
+                <CreditCard className="text-gray-500 dark:text-gray-400" size={16} />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Payment Method</span>
               </div>
-              <p className="font-semibold text-gray-900 capitalize">{order.payment_method}</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100 capitalize">{order.payment_method}</p>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
-                <Calendar className="text-gray-500" size={16} />
-                <span className="text-sm font-medium text-gray-700">Date</span>
+                <Calendar className="text-gray-500 dark:text-gray-400" size={16} />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Date</span>
               </div>
-              <p className="font-semibold text-gray-900">
+              <p className="font-semibold text-gray-900 dark:text-gray-100">
                 {new Date(order.created_at).toLocaleDateString()}
               </p>
             </div>
+
+            {order.order_type && (
+              <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <Truck className="text-gray-500 dark:text-gray-400" size={16} />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Order Type</span>
+                </div>
+                <p className="font-semibold text-gray-900 dark:text-gray-100 capitalize">{order.order_type}</p>
+              </div>
+            )}
+
+            {order.customer_phone && (
+              <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <Phone className="text-gray-500 dark:text-gray-400" size={16} />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone</span>
+                </div>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">{order.customer_phone}</p>
+              </div>
+            )}
+
+            {(order.delivery_address || hasMapLink) && (
+              <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl col-span-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin className="text-gray-500 dark:text-gray-400" size={16} />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Delivery Address</span>
+                </div>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">
+                  {order.delivery_address || 'No address provided'}
+                </p>
+                {hasMapLink && (
+                  <a
+                    href={`https://maps.google.com/?q=${order.delivery_lat},${order.delivery_lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 mt-2 text-sm text-primary-600 dark:text-primary-400 hover:underline"
+                  >
+                    <MapPin size={14} />
+                    Open in Google Maps
+                  </a>
+                )}
+              </div>
+            )}
+
+            {order.notes && (
+              <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl col-span-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText className="text-gray-500 dark:text-gray-400" size={16} />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Notes</span>
+                </div>
+                <p className="font-semibold text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{order.notes}</p>
+              </div>
+            )}
           </div>
 
           {/* Order Items */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Order Items</h3>
             <div className="space-y-3">
               {items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                   <div>
-                    <p className="font-medium text-gray-900">{item.product_name}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{item.product_name}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       ${item.unit_price.toFixed(2)} × {item.quantity}
                     </p>
                   </div>
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">
                     ${item.total_price.toFixed(2)}
                   </p>
                 </div>
@@ -98,16 +178,22 @@ export function OrderDetailsModal({ orderId, onClose }: OrderDetailsModalProps) 
           </div>
 
           {/* Order Total */}
-          <div className="border-t border-gray-200 pt-4">
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
+            {deliveryFee > 0 && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Delivery Fee:</span>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">${deliveryFee.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold text-gray-900">Total Amount:</span>
-              <span className="text-2xl font-bold text-primary-600">
+              <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">Total Amount:</span>
+              <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">
                 ${order.total_amount.toFixed(2)}
               </span>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </Modal>
   );
 }

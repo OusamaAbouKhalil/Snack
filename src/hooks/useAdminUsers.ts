@@ -12,6 +12,7 @@ interface AdminUser {
 export function useAdminUsers() {
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAdminUsers();
@@ -36,10 +37,11 @@ export function useAdminUsers() {
   };
 
   const addAdminUser = async (email: string): Promise<boolean> => {
+    setError(null);
     try {
       // First check if user exists in auth.users
       const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
-      
+
       if (listError) {
         // Fallback: try to add directly (user might exist but we can't list them)
         const { error } = await supabase
@@ -51,18 +53,18 @@ export function useAdminUsers() {
 
         if (error) {
           if (error.code === '23505') {
-            alert('User is already an admin.');
+            setError('User is already an admin.');
           } else {
-            alert('Failed to add admin user. Please ensure the user has an account.');
+            setError('Failed to add admin user. Please ensure the user has an account.');
           }
           return false;
         }
       } else {
         // Find user by email
         const user = users.find(u => u.email === email);
-        
+
         if (!user) {
-          alert('User not found. Please make sure the user has an account.');
+          setError('User not found. Please make sure the user has an account.');
           return false;
         }
 
@@ -77,9 +79,9 @@ export function useAdminUsers() {
 
         if (error) {
           if (error.code === '23505') {
-            alert('User is already an admin.');
+            setError('User is already an admin.');
           } else {
-            alert('Failed to add admin user.');
+            setError('Failed to add admin user.');
           }
           return false;
         }
@@ -89,12 +91,13 @@ export function useAdminUsers() {
       return true;
     } catch (error) {
       console.error('Error adding admin user:', error);
-      alert('Failed to add admin user.');
+      setError('Failed to add admin user.');
       return false;
     }
   };
 
   const removeAdminUser = async (adminId: string): Promise<boolean> => {
+    setError(null);
     try {
       const { error } = await supabase
         .from('admin_users')
@@ -107,11 +110,13 @@ export function useAdminUsers() {
       return true;
     } catch (error) {
       console.error('Error removing admin user:', error);
+      setError('Failed to remove admin user.');
       return false;
     }
   };
 
   const toggleAdminStatus = async (adminId: string, isActive: boolean): Promise<boolean> => {
+    setError(null);
     try {
       const { error } = await supabase
         .from('admin_users')
@@ -124,6 +129,7 @@ export function useAdminUsers() {
       return true;
     } catch (error) {
       console.error('Error updating admin status:', error);
+      setError('Failed to update admin status.');
       return false;
     }
   };
@@ -131,6 +137,7 @@ export function useAdminUsers() {
   return {
     adminUsers,
     loading,
+    error,
     addAdminUser,
     removeAdminUser,
     toggleAdminStatus,
