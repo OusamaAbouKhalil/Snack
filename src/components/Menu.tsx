@@ -37,7 +37,7 @@ const HERO_IMAGES = {
   friesSide:
     'https://images.pexels.com/photos/115740/pexels-photo-115740.jpeg?auto=compress&cs=tinysrgb&w=600',
   drinkSide:
-    'https://images.pexels.com/photos/1113876/pexels-photo-1113876.jpeg?auto=compress&cs=tinysrgb&w=600',
+    'https://images.pexels.com/photos/1233319/pexels-photo-1233319.jpeg?auto=compress&cs=tinysrgb&w=600',
   friesWide:
     'https://images.pexels.com/photos/4109234/pexels-photo-4109234.jpeg?auto=compress&cs=tinysrgb&w=1600',
 };
@@ -186,7 +186,7 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
   return (
     <div className="min-h-screen">
       {/* ============ HERO ============ */}
-      <section className="relative overflow-hidden bg-cream-100 dark:bg-gray-900 transition-colors duration-300">
+      <section className="relative overflow-hidden bg-green-100 dark:bg-green-900 transition-colors duration-300">
         {/* decorative blobs */}
         <div aria-hidden="true" className="pointer-events-none absolute -top-24 -right-24 w-96 h-96 rounded-full bg-primary-200/50 dark:bg-primary-900/20 blur-3xl" />
         <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 -left-20 w-80 h-80 rounded-full bg-primary-300/40 dark:bg-primary-800/20 blur-3xl" />
@@ -301,8 +301,8 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
         <div
           className={`transition-all duration-300 z-40 ${
             isSticky
-              ? 'fixed top-16 left-0 right-0 bg-cream-50/95 dark:bg-gray-900/95 backdrop-blur-lg shadow-lg border-b border-primary-100 dark:border-gray-700'
-              : 'relative bg-cream-50 dark:bg-gray-900 border-b border-primary-100/60 dark:border-gray-800'
+              ? 'fixed top-16 left-0 right-0 bg-green-50/95 dark:bg-green-900/95 backdrop-blur-lg shadow-lg border-b border-primary-200 dark:border-green-700'
+              : 'relative bg-green-50 dark:bg-green-900 border-b border-primary-200/60 dark:border-green-800'
           }`}
         >
           <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6">
@@ -345,7 +345,7 @@ export function Menu({ products, categories, selectedCategory, onCategorySelect 
       </div>
 
       {/* ============ MENU CONTENT ============ */}
-      <div className="bg-cream-50 dark:bg-gray-900 transition-colors duration-300">
+      <div className="bg-green-50 dark:bg-green-900 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           {filteredProducts.length > 0 ? (
             selectedCategory === 'all' ? (

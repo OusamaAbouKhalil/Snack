@@ -249,7 +249,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     <div className="h-full flex flex-col bg-cocoa-950">
       {/* Brand */}
       <div className="flex items-center gap-3 px-5 h-16 border-b border-white/10 flex-shrink-0">
-        <div className="w-9 h-9 rounded-xl overflow-hidden bg-white/10 p-0.5 ring-1 ring-white/10">
+        <div className="w-9 h-9">
           <img src="/logo.png" alt="Mat3amji" className="w-full h-full object-contain" />
         </div>
         <div className="min-w-0">

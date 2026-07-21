@@ -34,7 +34,7 @@ export function GuestApp() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-cream-100 dark:bg-green-900 flex items-center justify-center transition-colors duration-300 p-4">
+      <div className="min-h-screen bg-green-50 dark:bg-green-900 flex items-center justify-center transition-colors duration-300 p-4">
         <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-card border border-primary-100 dark:border-gray-700 max-w-md">
           <span className="inline-flex w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/40 items-center justify-center mb-4">
             <AlertTriangle size={28} className="text-red-500 dark:text-red-400" />
@@ -54,12 +54,12 @@ export function GuestApp() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cream-50 via-cream-100 to-cream-200 dark:from-green-900 dark:via-green-800 dark:to-green-700 transition-colors duration-300">
-      <header className="bg-cream-50/90 dark:bg-green-900/90 backdrop-blur-lg border-b border-primary-100 dark:border-green-700 transition-colors duration-300 sticky top-0 z-30">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-cream-50 to-green-100 dark:from-green-900 dark:via-green-800 dark:to-green-700 transition-colors duration-300">
+      <header className="bg-green-50/90 dark:bg-green-900/90 backdrop-blur-lg border-b border-primary-200 dark:border-green-700 transition-colors duration-300 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <a href="/" className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl overflow-hidden bg-white dark:bg-gray-800 p-1 shadow-sm ring-1 ring-primary-100 dark:ring-gray-700 transition-colors duration-300">
+              <div className="w-11 h-11 shadow-sm transition-colors duration-300">
                 <img src="/logo.png" alt="Mat3amji Logo" className="w-full h-full object-contain" />
               </div>
               <div>
@@ -138,7 +138,7 @@ export function GuestApp() {
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-11 h-11 rounded-2xl overflow-hidden bg-cream-50 p-1">
+                <div className="w-11 h-11">
                   <img src="/logo.png" alt="Mat3amji Logo" className="w-full h-full object-contain" />
                 </div>
                 <span className="font-display text-2xl font-bold text-cream-50">Mat3amji</span>
