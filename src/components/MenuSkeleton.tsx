@@ -3,9 +3,9 @@
 // data arrives, instead of a blank screen with a spinner.
 export function MenuSkeleton() {
   return (
-    <div className="min-h-screen bg-cream-50 dark:bg-gray-900 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-cream-50 via-cream-100 to-cream-200 dark:from-green-900 dark:via-green-800 dark:to-green-700 transition-colors duration-300">
       {/* Header */}
-      <header className="bg-cream-50/90 dark:bg-gray-900/90 backdrop-blur-lg border-b border-primary-100 dark:border-gray-800 sticky top-0 z-30">
+      <header className="bg-cream-50/90 dark:bg-green-900/90 backdrop-blur-lg border-b border-primary-100 dark:border-green-700 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">

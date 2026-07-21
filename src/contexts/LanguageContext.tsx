@@ -83,7 +83,7 @@ const translations: Record<string, Record<Language, string>> = {
   'financial.december': { en: 'December', ar: 'ديسمبر' },
 
   // Guest storefront
-  'guest.tagline': { en: 'Delicious Food & More', ar: 'أطباق شهية وأكثر' },
+  'guest.tagline': { en: 'Delicious Snacks & More', ar: 'وجبات شهية وأكثر' },
   'guest.loadingMenu': { en: 'Loading menu...', ar: 'جاري تحميل القائمة...' },
   'guest.connectionError': { en: 'Connection Error', ar: 'خطأ في الاتصال' },
   'guest.retry': { en: 'Retry', ar: 'إعادة المحاولة' },
