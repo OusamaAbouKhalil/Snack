@@ -60,10 +60,10 @@ export function GuestApp() {
           <div className="flex items-center justify-between h-16">
             <a href="/" className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl overflow-hidden bg-white dark:bg-gray-800 p-1 shadow-sm ring-1 ring-primary-100 dark:ring-gray-700 transition-colors duration-300">
-                <img src="/logo.png" alt="Hadi Snack Logo" className="w-full h-full object-contain" />
+                <img src="/logo.png" alt="Mat3amji Logo" className="w-full h-full object-contain" />
               </div>
               <div>
-                <span className="font-display block text-2xl font-bold text-brown-900 dark:text-cream-100 leading-none transition-colors duration-300">Hadi Snack</span>
+                <span className="font-display block text-2xl font-bold text-brown-900 dark:text-cream-100 leading-none transition-colors duration-300">Mat3amji</span>
                 <span className="text-xs font-medium text-primary-700 dark:text-primary-400 transition-colors duration-300 hidden sm:block">{t('guest.tagline')}</span>
               </div>
             </a>
@@ -139,9 +139,9 @@ export function GuestApp() {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-11 h-11 rounded-2xl overflow-hidden bg-cream-50 p-1">
-                  <img src="/logo.png" alt="Hadi Snack Logo" className="w-full h-full object-contain" />
+                  <img src="/logo.png" alt="Mat3amji Logo" className="w-full h-full object-contain" />
                 </div>
-                <span className="font-display text-2xl font-bold text-cream-50">Hadi Snack</span>
+                <span className="font-display text-2xl font-bold text-cream-50">Mat3amji</span>
               </div>
               <p className="text-cream-200/70 leading-relaxed max-w-xs">{t('guest.footerTagline')}</p>
             </div>
@@ -172,7 +172,7 @@ export function GuestApp() {
         </div>
         <div className="border-t border-cream-200/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-sm text-cream-200/50 text-center">
-            © {new Date().getFullYear()} Hadi Snack. {t('guest.rights')}
+            © {new Date().getFullYear()} Mat3amji. {t('guest.rights')}
           </div>
         </div>
       </footer>

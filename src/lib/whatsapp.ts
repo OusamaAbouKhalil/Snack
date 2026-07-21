@@ -18,7 +18,7 @@ export function buildOrderWhatsAppMessage(opts: {
   deliveryAddress?: string | null;
 }): string {
   const lines = [
-    `Hi ${opts.customerName || 'there'}, thanks for your order #${opts.orderNumber} from Hadi Snack!`,
+    `Hi ${opts.customerName || 'there'}, thanks for your order #${opts.orderNumber} from Mat3amji!`,
     '',
     ...opts.items.map((i) => `• ${i.quantity}x ${i.name}`),
     '',

@@ -55,8 +55,8 @@ function receiptBody(data: ReceiptData, settings: ReceiptSettings, copyLabel: st
   return `
     <div class="receipt">
       <div class="header">
-        <img src="/logo.png" alt="${esc(settings.store_name || 'Hadi Snack')}" class="logo-img" />
-        <div class="store-name">${esc(settings.store_name || 'Hadi Snack')}</div>
+        <img src="/logo.png" alt="${esc(settings.store_name || 'Mat3amji')}" class="logo-img" />
+        <div class="store-name">${esc(settings.store_name || 'Mat3amji')}</div>
         ${settings.store_address ? `<div class="store-info">${esc(settings.store_address)}</div>` : ''}
         ${settings.store_phone ? `<div class="store-info">${esc(settings.store_phone)}</div>` : ''}
         ${copyLabel ? `<div class="copy-label">${esc(copyLabel)}</div>` : ''}

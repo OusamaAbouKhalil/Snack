@@ -89,7 +89,7 @@ export function LoginModal({ isOpen, onClose, allowSignup = true }: LoginModalPr
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {showLoginForm ? t('guest.signIn') : t('guest.joinHadi Snack')}
+              {showLoginForm ? t('guest.signIn') : t('guest.joinMat3amji')}
             </h2>
             <button
               onClick={onClose}

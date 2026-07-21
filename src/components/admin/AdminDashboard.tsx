@@ -193,7 +193,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
   const flashTitle = (orderNumber: string) => {
     if (flashTimer.current) clearInterval(flashTimer.current);
-    const original = 'Hadi Snack — Admin';
+    const original = 'Mat3amji — Admin';
     let on = false;
     flashTimer.current = setInterval(() => {
       document.title = on ? `🔔 ${orderNumber}` : original;
@@ -207,9 +207,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   };
 
   useEffect(() => {
-    document.title = 'Hadi Snack — Admin';
+    document.title = 'Mat3amji — Admin';
     return () => {
-      document.title = 'Hadi Snack';
+      document.title = 'Mat3amji';
       if (flashTimer.current) clearInterval(flashTimer.current);
     };
   }, []);
@@ -250,10 +250,10 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
       {/* Brand */}
       <div className="flex items-center gap-3 px-5 h-16 border-b border-white/10 flex-shrink-0">
         <div className="w-9 h-9 rounded-xl overflow-hidden bg-white/10 p-0.5 ring-1 ring-white/10">
-          <img src="/logo.png" alt="Hadi Snack" className="w-full h-full object-contain" />
+          <img src="/logo.png" alt="Mat3amji" className="w-full h-full object-contain" />
         </div>
         <div className="min-w-0">
-          <p className="font-bold text-white leading-tight font-display">Hadi Snack</p>
+          <p className="font-bold text-white leading-tight font-display">Mat3amji</p>
           <p className="text-[11px] font-medium uppercase tracking-wider text-primary-400">Admin Panel</p>
         </div>
         <button

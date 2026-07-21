@@ -17,61 +17,63 @@ export default {
         // palette. Rebasing `gray` onto Tailwind's warm "stone" ramp retints
         // every existing `gray-*`/`dark:bg-gray-*` class at once.
         gray: colors.stone,
+        // Sampled directly from the Mat3amji logo (deep green badge, gold
+        // chef-hat/text, cream utensils) so the app's theme pixel-matches it.
         primary: {
           50: '#fffef9',
           100: '#fffef5',
           200: '#fffbeb',
-          300: '#fff6d6',
-          400: '#ffe6ae', // Light cream - base color
-          500: '#F1B71C', // Gold/yellow - main brand color
-          600: '#d9a519',
-          700: '#c19316',
-          800: '#a98113',
-          900: '#916f10',
+          300: '#fceec2',
+          400: '#f8d772',
+          500: '#F3B817', // Gold — sampled from logo text/chef-hat
+          600: '#d9a415',
+          700: '#bf9013',
+          800: '#a67c10',
+          900: '#8c680e',
         },
         green: {
-          50: '#e6f0e8',
-          100: '#cce1d1',
-          200: '#99c3a3',
-          300: '#66a575',
-          400: '#338747',
-          500: '#044211', // Dark green - base color
-          600: '#033b0f',
-          700: '#02340d',
-          800: '#022d0b',
-          900: '#012609',
+          50: '#e9f3ee',
+          100: '#c9e2d4',
+          200: '#94c5a9',
+          300: '#5ea87e',
+          400: '#2d7f54',
+          500: '#128040',
+          600: '#0f6d37',
+          700: '#0c5f30',
+          800: '#0a5129',
+          900: '#084322', // Deep green — sampled from logo background
         },
         cream: {
           50: '#fffef9',
           100: '#fffef5',
           200: '#fffceb',
-          300: '#fff9e1',
-          400: '#ffe6ae', // Light cream - base color
-          500: '#ffd97a',
-          600: '#ffcc46',
-          700: '#ffbf12',
+          300: '#fef3d9',
+          400: '#FEE7AD', // Cream — sampled from logo utensils
+          500: '#fddb85',
+          600: '#fccf5c',
+          700: '#f5be2e',
           800: '#e6a800',
           900: '#cc9600',
         },
         // Keep brown for backward compatibility, but use green tones
         brown: {
-          50: '#e6f0e8',
-          100: '#cce1d1',
-          200: '#99c3a3',
-          300: '#66a575',
-          400: '#338747',
-          500: '#044211', // Dark green
-          600: '#033b0f',
-          700: '#02340d',
-          800: '#022d0b',
-          900: '#012609',
+          50: '#e9f3ee',
+          100: '#c9e2d4',
+          200: '#94c5a9',
+          300: '#5ea87e',
+          400: '#2d7f54',
+          500: '#128040',
+          600: '#0f6d37',
+          700: '#0c5f30',
+          800: '#0a5129',
+          900: '#084322',
         },
-        // Dark admin-sidebar tone, built from the brand's own dark green
+        // Dark admin-sidebar tone, built from the brand's own logo-green
         // rather than an unrelated brown, so the rail stays on-brand.
         cocoa: {
-          800: '#022d0b',
-          900: '#012609',
-          950: '#011a04',
+          800: '#0a5129',
+          900: '#084322',
+          950: '#052b16',
         },
       },
       boxShadow: {
