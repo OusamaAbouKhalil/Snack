@@ -2,8 +2,7 @@
  * Shared thermal receipt (80mm) builder + printer.
  *
  * - Prints via a hidden iframe: immune to popup blockers.
- * - Prints TWO copies per job (customer + store) separated by a cut line;
- *   thermal rolls print both in one pass.
+ * - Prints a single copy per job.
  * - Always uses the REAL saved order number and settings-driven exchange rate.
  */
 
@@ -121,7 +120,7 @@ function receiptBody(data: ReceiptData, settings: ReceiptSettings, copyLabel: st
     </div>`;
 }
 
-export function buildReceiptHTML(data: ReceiptData, settings: ReceiptSettings, copies = 2): string {
+export function buildReceiptHTML(data: ReceiptData, settings: ReceiptSettings, copies = 1): string {
   const labels = ['CUSTOMER COPY', 'STORE COPY', 'COPY 3', 'COPY 4'];
   const bodies = Array.from({ length: Math.max(1, copies) }, (_, i) =>
     receiptBody(data, settings, copies > 1 ? labels[i] || `COPY ${i + 1}` : '')
@@ -161,14 +160,14 @@ export function buildReceiptHTML(data: ReceiptData, settings: ReceiptSettings, c
   /* Order meta */
   .order-meta { margin-bottom: 8px; }
   .order-number { font-size: 15px; font-weight: bold; text-align: center; margin-bottom: 6px; letter-spacing: 0.5px; }
-  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 8px; font-size: 11px; }
-  .meta-label { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 8px; font-size: 11px; font-weight: 600; }
+  .meta-label { display: block; font-size: 9px; font-weight: normal; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
   .tag-row { text-align: center; margin: 8px 0 2px; }
   .tag {
     display: inline-block; font-size: 10px; font-weight: bold; letter-spacing: 1px;
     padding: 3px 12px; border: 1.5px solid #000; border-radius: 3px;
   }
-  .address-block, .notes-block { font-size: 11px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #999; }
+  .address-block, .notes-block { font-size: 11px; font-weight: 600; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #999; }
 
   .separator { border-top: 1px dashed #000; margin: 8px 0; }
 
@@ -206,7 +205,7 @@ export function buildReceiptHTML(data: ReceiptData, settings: ReceiptSettings, c
 }
 
 /** Print via hidden iframe — no popups, no blockers. */
-export function printReceipt(data: ReceiptData, settings: ReceiptSettings, copies = 2): void {
+export function printReceipt(data: ReceiptData, settings: ReceiptSettings, copies = 1): void {
   const html = buildReceiptHTML(data, settings, copies);
   const iframe = document.createElement('iframe');
   iframe.style.position = 'fixed';

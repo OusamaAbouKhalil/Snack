@@ -68,7 +68,7 @@ export function useDashboardStats(initialDays: number = 7) {
       ] = await Promise.all([
         supabase
           .from('orders')
-          .select('total_amount')
+          .select('total_amount, delivery_fee')
           .eq('status', 'completed')
           .gte('created_at', today),
         supabase
@@ -94,7 +94,8 @@ export function useDashboardStats(initialDays: number = 7) {
       if (inventoryError) throw inventoryError;
       if (onlineTodayError) throw onlineTodayError;
 
-      const todaySales = todayOrders?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
+      // Delivery fee is collected for the delivery company, not store revenue.
+      const todaySales = todayOrders?.reduce((sum, order) => sum + order.total_amount - (order.delivery_fee || 0), 0) || 0;
 
       const lowStockItems = inventory?.filter(item => 
         item.stock_quantity <= item.min_stock_level && item.stock_quantity > 0

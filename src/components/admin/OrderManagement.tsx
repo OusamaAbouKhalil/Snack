@@ -308,7 +308,7 @@ export function OrderManagement({ focusOrderId, onFocusHandled }: OrderManagemen
     });
 
     if (created) {
-      // Print 2 copies with the REAL saved order number.
+      // Print with the REAL saved order number.
       printReceipt(
         {
           orderNumber: created.order_number,
@@ -324,8 +324,7 @@ export function OrderManagement({ focusOrderId, onFocusHandled }: OrderManagemen
           orderType: created.order_type,
           deliveryAddress: orderType === "delivery" ? delivery.address.trim() : null,
         },
-        settings || {},
-        2
+        settings || {}
       );
 
       handleCloseCreateOrder();
@@ -335,7 +334,7 @@ export function OrderManagement({ focusOrderId, onFocusHandled }: OrderManagemen
     }
   };
 
-  // Reprint any order from the list (2 copies).
+  // Reprint any order from the list.
   const reprintOrder = async (order: Order) => {
     const result = await getOrderWithItems(order.id);
     if (!result) {
@@ -359,8 +358,7 @@ export function OrderManagement({ focusOrderId, onFocusHandled }: OrderManagemen
         notes: result.order.notes,
         createdAt: result.order.created_at,
       },
-      settings || {},
-      2
+      settings || {}
     );
   };
 
@@ -504,7 +502,7 @@ export function OrderManagement({ focusOrderId, onFocusHandled }: OrderManagemen
                           <IconButton icon={Pencil} label="Edit Order" tone="primary" onClick={() => setEditingOrder(order)} />
                         </>
                       )}
-                      <IconButton icon={Printer} label="Print Receipt (2 copies)" onClick={() => reprintOrder(order)} />
+                      <IconButton icon={Printer} label="Print Receipt" onClick={() => reprintOrder(order)} />
                       {order.customer_phone && (
                         <IconButton
                           icon={MessageCircle}

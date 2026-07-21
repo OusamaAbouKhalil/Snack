@@ -46,7 +46,7 @@ export function OrderHistory() {
     }
   };
 
-  // Reprint a receipt (2 copies) for any order in the list.
+  // Reprint a receipt for any order in the list.
   const handlePrintReceipt = async (order: Order) => {
     if (printingOrderId) return;
     setPrintingOrderId(order.id);
@@ -75,8 +75,7 @@ export function OrderHistory() {
           notes: order.notes,
           createdAt: order.created_at,
         },
-        settings || {},
-        2
+        settings || {}
       );
     } catch (error) {
       console.error('Error printing receipt:', error);
@@ -231,7 +230,7 @@ export function OrderHistory() {
                       <IconButton icon={Eye} label="View details" tone="primary" onClick={() => setSelectedOrder(order.id)} />
                       <IconButton
                         icon={Printer}
-                        label="Print receipt (2 copies)"
+                        label="Print receipt"
                         onClick={() => handlePrintReceipt(order)}
                         disabled={printingOrderId === order.id}
                       />

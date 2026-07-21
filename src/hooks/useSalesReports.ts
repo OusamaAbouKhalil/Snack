@@ -90,7 +90,7 @@ export function useSalesReports(startDate: string, endDate: string) {
       // Total revenue and orders
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('id, total_amount, created_at')
+        .select('id, total_amount, delivery_fee, created_at')
         .eq('status', 'completed')
         .gte('created_at', startDate)
         .lte('created_at', `${endDate}T23:59:59`);
@@ -111,7 +111,8 @@ export function useSalesReports(startDate: string, endDate: string) {
       }
 
       const orderIds = ordersData.map(o => o.id);
-      const totalRevenue = ordersData.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+      // Delivery fee is collected for the delivery company, not store revenue.
+      const totalRevenue = ordersData.reduce((sum, order) => sum + (order.total_amount || 0) - (order.delivery_fee || 0), 0);
       const totalOrders = ordersData.length;
       const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 

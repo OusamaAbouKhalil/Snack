@@ -104,14 +104,15 @@ export function useFinancialRecords() {
     try {
       const { data, error: fetchError } = await supabase
         .from('orders')
-        .select('total_amount')
+        .select('total_amount, delivery_fee')
         .eq('status', 'completed')
         .gte('created_at', startDate)
         .lte('created_at', endDate);
 
       if (fetchError) throw fetchError;
 
-      return (data || []).reduce((sum, order) => sum + order.total_amount, 0);
+      // Delivery fee is collected for the delivery company, not store revenue.
+      return (data || []).reduce((sum, order) => sum + order.total_amount - (order.delivery_fee || 0), 0);
     } catch (err) {
       console.error('Error fetching profits:', err);
       return 0;
@@ -160,15 +161,16 @@ export function useFinancialRecords() {
     // Fetch daily profits
     const { data: dailyOrders } = await supabase
       .from('orders')
-      .select('total_amount, created_at')
+      .select('total_amount, delivery_fee, created_at')
       .eq('status', 'completed')
       .gte('created_at', startDate)
       .lte('created_at', endDate);
 
+    // Delivery fee is collected for the delivery company, not store revenue.
     dailyOrders?.forEach(order => {
       const date = order.created_at.split('T')[0];
       const current = expensesOverTimeMap.get(date) || { expenses: 0, profits: 0 };
-      current.profits += order.total_amount;
+      current.profits += order.total_amount - (order.delivery_fee || 0);
       expensesOverTimeMap.set(date, current);
     });
 
@@ -188,7 +190,7 @@ export function useFinancialRecords() {
     dailyOrders?.forEach(order => {
       const month = order.created_at.substring(0, 7);
       const current = monthlyMap.get(month) || { expenses: 0, profits: 0 };
-      current.profits += order.total_amount;
+      current.profits += order.total_amount - (order.delivery_fee || 0);
       monthlyMap.set(month, current);
     });
 
@@ -213,7 +215,7 @@ export function useFinancialRecords() {
     dailyOrders?.forEach(order => {
       const year = order.created_at.substring(0, 4);
       const current = yearlyMap.get(year) || { expenses: 0, profits: 0 };
-      current.profits += order.total_amount;
+      current.profits += order.total_amount - (order.delivery_fee || 0);
       yearlyMap.set(year, current);
     });
 

@@ -20,7 +20,7 @@ export function OrderDetailsModal({ orderId, onClose }: OrderDetailsModalProps) 
   const deliveryFee = order ? Number(order.delivery_fee) || 0 : 0;
   const hasMapLink = order && order.delivery_lat != null && order.delivery_lng != null;
 
-  // Print the receipt (2 copies) from the already-loaded order details.
+  // Print the receipt from the already-loaded order details.
   const handlePrintReceipt = () => {
     if (!order) return;
     printReceipt(
@@ -40,8 +40,7 @@ export function OrderDetailsModal({ orderId, onClose }: OrderDetailsModalProps) 
         notes: order.notes,
         createdAt: order.created_at,
       },
-      settings || {},
-      2
+      settings || {}
     );
   };
 
