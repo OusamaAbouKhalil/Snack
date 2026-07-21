@@ -4,7 +4,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { useAuth } from './contexts/AuthContext';
 
 export default function AdminApp() {
-  const { user, loading } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
 
   if (loading) {
     return (
@@ -17,7 +17,10 @@ export default function AdminApp() {
     );
   }
 
-  if (!user) {
+  // A logged-in customer session isn't an admin session — show the admin
+  // sign-in form (which will replace the session on submit) instead of
+  // bouncing to the storefront, so staff can log in from a customer device.
+  if (!user || !isAdmin) {
     return <AdminLoginPage />;
   }
 
