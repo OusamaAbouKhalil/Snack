@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://efcrmtfshytjflittotm.supabase.co';
-const supabaseAnonKey =  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmY3JtdGZzaHl0amZsaXR0b3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzOTIxMDIsImV4cCI6MjA5OTk2ODEwMn0.IcA3HfB3Hq8n4dbUndyfcmjIWLw63RcmFOkWGhLOqrw';
+const supabaseUrl = 'https://jkkgfamautobsdmojfwh.supabase.co';
+const supabaseAnonKey =  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impra2dmYW1hdXRvYnNkbW9qZndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2Mjg1MjUsImV4cCI6MjEwMDIwNDUyNX0.-jJtzep5E-iOGBQxz8Re8ZoE0nDNwrmTO9Iz9p9-HLs';
 
 // Create Supabase client with custom fetch to handle QUIC protocol errors
 // QUIC (HTTP/3) errors can occur when browser tries to use QUIC but connection fails
