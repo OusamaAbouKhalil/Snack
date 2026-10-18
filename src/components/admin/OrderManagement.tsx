@@ -484,10 +484,13 @@ export function OrderManagement({ focusOrderId, onFocusHandled }: OrderManagemen
                           ? "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300"
                           : order.status === "pending"
                           ? "bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300"
+                          : order.status === "unpaid"
+                          ? "bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300"
                           : "bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300"
                       }`}
                     >
                       <option value="pending">Pending</option>
+                      <option value="unpaid">Unpaid</option>
                       <option value="completed">Completed</option>
                       <option value="cancelled">Cancelled</option>
                     </select>
@@ -495,7 +498,7 @@ export function OrderManagement({ focusOrderId, onFocusHandled }: OrderManagemen
                   <Td>
                     <div className="flex gap-1">
                       <IconButton icon={Eye} label="View Order" onClick={() => setViewingOrderId(order.id)} />
-                      {order.status === "pending" && (
+                      {(order.status === "pending" || order.status === "unpaid") && (
                         <>
                           <IconButton icon={Check} label="Mark as Completed" tone="primary" onClick={() => updateOrderStatus(order.id, "completed")} />
                           <IconButton icon={X} label="Cancel Order" tone="danger" onClick={() => updateOrderStatus(order.id, "cancelled")} />

@@ -148,7 +148,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     const { count } = await supabase
       .from('orders')
       .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending');
+      .in('status', ['pending', 'unpaid']);
     setPendingCount(count ?? 0);
   };
 

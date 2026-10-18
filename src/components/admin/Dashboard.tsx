@@ -273,7 +273,9 @@ export function Dashboard() {
                           ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
                           : order.status === 'pending'
                             ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300'
-                            : 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300'
+                            : order.status === 'unpaid'
+                              ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300'
+                              : 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300'
                       }`}
                     >
                       {order.status}
